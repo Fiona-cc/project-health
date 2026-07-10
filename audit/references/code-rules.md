@@ -58,11 +58,20 @@ suppressions:
 **度量**：数**非空行**（去掉纯空白行），避免空行灌水虚高。
 示例：`grep -cve '^[[:space:]]*$' <file>`（或读取后统计非空行）。
 
-**文件分类（分组打标签）**：先给每个文件打一个"性质"标签——
-- **测试**：路径含 `/test/` 或 `/tests/`，或文件名匹配 `test_*`、`*_test.*`、`*.test.*`、`*.spec.*`、`*Test.<扩展>`、`*Tests.<扩展>`
-- **样式**：扩展名 `.css .scss .less .wxss`
-- **数据**：路径含 `/data/` 目录（如 `data/giftRecords.js`）
-- **生产代码**：以上都不是
+**文件分类（需明确证据，宁可当生产代码，不乱降级）**
+
+> **原则**：**不要仅凭目录名**（如 `/data/`、`config/`、`scripts/`、`utils/`、`common/`、`core/`、`models/`、`services/`、`lib/`）判断性质或降级。降级必须有**路径、文件名或扩展名的明确证据**。**拿不准 → 按生产代码处理**，避免漏报真正的大文件。
+
+- **测试**（需明确证据之一）：
+  - 位于 `**/test/**`、`**/tests/**`、`**/__tests__/**` 目录；或
+  - 文件名匹配 `test_*`、`*_test.*`、`*.test.*`、`*.spec.*`、`*Test.<扩展>`、`*Tests.<扩展>`
+- **样式**：扩展名属于 `.css .scss .less .wxss`
+- **数据 / mock / fixture / seed**（需明确证据之一）：
+  - 文件名含 `mock`、`fixture`、`seed`、`stub`、`sample-data`（如 `*.mock.*`、`*fixtures*`、`seed*`）；或
+  - 位于 `**/__mocks__/**`、`**/fixtures/**`、`**/__fixtures__/**` 目录；或
+  - 扩展名是纯数据格式（`.json .csv .tsv .yaml .yml .xml`）
+  - ⚠️ **仅在 `data/` 目录下不算证据**——如 `data/giftRecords.js` 无 mock/fixture/seed 证据 → 按**生产代码**处理（照常可 🔴）。
+- **生产代码**：以上都不匹配的，一律按生产代码处理。
 
 **判级（按性质区别对待，避免"狼来了")**：
 - **生产代码**：行数 ≥ `file_error`(800) → 🔴；≥ `file_warn`(400) 且 < 800 → ⚠️
