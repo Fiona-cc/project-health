@@ -20,7 +20,7 @@ Repairs the issues found by `project-health-audit`. **This skill writes code/doc
 1. **人说才修** — only fix items the user **explicitly names**. Never auto-fix everything.
 2. **One commit per item** — each fix is independently revertible.
 3. **Clean base** — ensure the working tree is clean (or commit/stash existing changes) before fixing; never mix a fix with unrelated changes.
-4. **Verify after** — re-run the audit check for that item (confirm it's gone); if the project has tests, run them **before** (baseline) and **after**.
+4. **Verify after — 改完必须确认没坏** — for any **code-touching** fix: run the project's **verify command** (`config.verify`, else auto-detected build/typecheck) **before (baseline) and after**, plus tests if present. **If it passed at baseline but fails after → the fix broke something → revert this fix immediately** and report. If **no** verify command **and no** tests exist, **say so honestly** — do not claim it's verified; recommend the user set `config.verify` or run the app manually. (Doc-only fixes skip build-verify — a doc change can't break the build; just re-run the audit check.)
 5. **Stay in scope** — only touch files **directly related** to the item.
 6. **When unsure, stop** — for anything risky or ambiguous, present a plan and get confirmation first.
 7. **Protected surfaces** (HTTP APIs / DB schema / frontend routes) — do not touch unless explicitly asked **and** confirmed.
@@ -38,9 +38,9 @@ Rule details: [references/fix-rules.md](references/fix-rules.md).
 
 1. **Locate** — from the latest audit report, get the item's `file:line` + type.
 2. **Grade** — 🟢 do directly; 🟡 present a plan and **wait for confirmation**.
-3. **Baseline** — ensure a clean working tree; run tests once if they exist.
+3. **Baseline** — ensure a clean working tree; **if code-touching**, run the verify command (build/typecheck) + tests once as a baseline (they must pass **before** you touch anything; if they already fail, stop and tell the user).
 4. **Fix** — touch only related files.
-5. **Verify** — re-run the audit check for that item (gone?) + tests again (unbroken?).
+5. **Verify** — re-run the audit check for the item (gone?). **If code-touching: re-run verify command + tests. If they now fail but passed at baseline → REVERT this fix and report — never commit broken code.** If neither verify nor tests exist, warn honestly that breakage can't be auto-confirmed.
 6. **Commit** — one commit per item; message says **what** + **which audit item**.
 
 ## Suppressions ("这项我认了，先别修")
