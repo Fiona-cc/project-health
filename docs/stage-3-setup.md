@@ -64,7 +64,7 @@
 
 ---
 
-## 六、config 完整 schema（setup 是它的唯一写入者，本处定稿）
+## 六、config 完整 schema（setup 是初始生成者 / 主维护者，本处定稿）
 
 ```yaml
 # .project-health/config.yml —— 由 project-health-setup 生成
@@ -76,13 +76,14 @@ thresholds:
   file_warn: 400
   file_error: 800
   doc_warn: 500
-verify: "npm run build"     # fix 改代码后的兜底命令（检测得到就填）
+verify: "npm run build"     # fix 改代码后的兜底命令（检测得到就填）；v1 只支持单条命令
+                            # （后续可扩展为 verify.commands 列表，本版先不改 schema）
 doc_maintenance:
   prompt_after_ops: false   # 操作后是否主动提醒维护文档（Stage 4 用）
 project_rules: []           # 项目专属硬规则（预留）
 suppressions: []            # "看着吓人其实没事" 的沉淀（id + reason + expires）
 ```
-- audit 读 `thresholds`/`level`/`suppressions`；fix 读 `verify`/`suppressions`；Stage 4 读 `doc_maintenance`。
+- **谁写/谁读**：**setup 生成并维护**；**audit 只读** `thresholds`/`level`/`suppressions`；**fix 可追加** `suppressions`（也读 `verify`）；**watch（将来）读** `doc_maintenance`。
 - 缺字段一律回落内置默认（保证 audit/fix 不依赖 setup 也能跑）。
 
 ---

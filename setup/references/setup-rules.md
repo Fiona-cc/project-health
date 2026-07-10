@@ -42,10 +42,10 @@
 
 ---
 
-## 四、config 完整 schema（本处定稿；setup 是唯一写入者）
+## 四、config 完整 schema（本处定稿；setup 是初始生成者 / 主维护者）
 
 ```yaml
-# .project-health/config.yml —— 由 project-health-setup 生成
+# .project-health/config.yml —— 由 project-health-setup 生成与维护
 domain: [frontend]          # 检测+确认，可多个
 stack: [react, vite]        # 检测到的技术栈（信息用）
 level: expert               # beginner | expert
@@ -54,14 +54,15 @@ thresholds:
   file_warn: 400
   file_error: 800
   doc_warn: 500
-verify: "npm run build"     # fix 改代码后的兜底命令
+verify: "npm run build"     # fix 改代码后的兜底命令；v1 只支持「单条命令」
+                            # （后续可扩展为 verify.commands 列表，本版先不改 schema）
 doc_maintenance:
   prompt_after_ops: false   # Stage 4 用
 project_rules: []           # 项目专属硬规则（预留）
 suppressions: []            # id + reason + expires
 ```
 
-- **谁读**：audit 读 `thresholds`/`level`/`suppressions`；fix 读 `verify`/`suppressions`；Stage 4 读 `doc_maintenance`。
+- **谁写/谁读**：**setup 生成并维护**；**audit 只读**（`thresholds`/`level`/`suppressions`）；**fix 可追加 `suppressions`**；**watch（将来）读 `doc_maintenance`**。
 - **缺字段回落默认**：保证 audit/fix 不依赖 setup 也能跑。
 - 只写 setup 认得的字段；不确定的字段留默认，别乱填。
 
