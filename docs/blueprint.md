@@ -93,30 +93,32 @@
 
 ## 四、套件结构与四个子 skill 职责
 
-成品是一个**套件**（和 superpowers 同构：入口 + N 个子 skill + 共享 references），不是单个 SKILL.md。
+成品是一个**套件**（和 superpowers 同构：多个各管一摊的子 skill）。**当前实现 = 四个独立子 skill 文件夹，各自带 `references/`，没有根 SKILL.md、也没有共享的根 references**；未来可选再加一个根路由 SKILL.md。
 
 ```
-project-health/                 ← 套件（skill 包本身）
-  SKILL.md                      ← 入口/路由：判断用户要体检/修复/配置/监控 → 分派
-  audit/  SKILL.md + references/ ← 只读体检，出报告
-  fix/    SKILL.md              ← 按报告逐项修（含文档压缩归档）
-  setup/  SKILL.md              ← 接入时：猜+问背景 → 生成 config（+ 给结构建议，不铺文件）
-  watch/  SKILL.md              ← 持续监控，对比基线/上次 audit 标记新增问题
-  references/                   ← 套件共享
-    code-rules.md               ← 代码侧通用检查规则
-    doc-rules.md                ← 文档侧通用检查规则
-    config-rules.md             ← skill/agent/hook 配置健康规则
-    domains/                    ← 领域包（Stage 1 先留空插槽）
-      _template.md
+project-health/                 ← 仓库（= 套件源）
+  audit/  SKILL.md + references/ ← 只读体检（code-rules / doc-rules / report-format）
+  fix/    SKILL.md + references/ ← 逐项修（fix-rules）
+  setup/  SKILL.md + references/ ← 背景→config（setup-rules）
+  watch/  SKILL.md + references/ ← 增量监控（watch-rules）
+  docs/                         ← 蓝图 + 各 stage spec + research
+  README.md
+  —— 无根 SKILL.md；各子 skill 自带 references（非共享）。
 ```
+
+**安装（推荐·也是实际做法）**：把各子目录装成**独立** skill 文件夹——
+`~/.claude/skills/project-health-audit / -fix / -setup / -watch`（仓库里仍保持短目录名）。
+
+**未来可选（本次不做）**：加一个根 `SKILL.md` 作路由入口（"你想体检/修/配/监控?"→分派）+ 可选共享 references。**领域包 `domains/`** 属 **B 面**（未来），当前未建。
 
 **生成物（落在被检项目里，工具中立、不绑 Claude）**：
 ```
 <被检项目>/
   .project-health/
-    config.yml                  ← setup 生成：背景/阈值/suppressions（§七）
-    baseline.md                 ← 首跑基线快照（§八）
+    config.yml                  ← setup 生成：背景/阈值/verify/context/suppressions（完整 schema 见 §七）
+    baseline.md                 ← 基线快照（watch 首跑、用户确认后写）
     reports/audit-YYYY-MM-DD.md ← 每次体检报告
+    reports/watch-YYYY-MM-DD.md ← 每次监控报告
   .project-healthignore         ← 显式忽略清单（§八），根目录，仿 .gitignore
 ```
 
@@ -125,7 +127,7 @@ project-health/                 ← 套件（skill 包本身）
 | audit | "检查项目健康""项目状态怎么样" | 只读扫描 → 出化验单（含健康分） | 只读 |
 | fix | "修第 3 项""压缩一下旧版本记录" | 按报告编号逐项修，每项独立 commit，修完重跑 audit | 读写 |
 | setup | "接入项目健康监控""给项目做工程配置" | 猜+问背景 → 写 config；给结构建议但不铺文件 | 读写 |
-| watch | "看看最近一个月新增了哪些问题" | 对比基线 → 标记 新增/已解决/遗留 | 只读 |
+| watch | "看看最近一个月新增了哪些问题" | 对比基线 → 标记 新增/已解决/遗留 + 文档漂移检测 | 不碰你的代码/文档；写自己的 watch 报告；`baseline.md` 仅用户确认才写 |
 
 **领域包**是横切在四个子 skill 之上的一条线：setup 认领域、audit 用领域骨架判断、fix 按领域骨架修。
 
@@ -198,31 +200,30 @@ project-health/                 ← 套件（skill 包本身）
 
 ## 七、setup：猜后再问 + config 格式
 
-**开场问答**（先自动检测，再摆出来让用户确认/纠正）：
-- 领域（前端 / 深度学习 / 后端 / …，看 package.json、requirements.txt、pom.xml 猜）
-- 水平（小白 / 专家）
-- 目标（MVP 快速迭代 / 长线产品）
-- 现有文档结构
-- 特殊偏好 / 阈值调整
+**开场问答**（先自动检测，再**引导用户描述背景**、据此提议 level/goal）：
+- 领域 / 技术栈（看 package.json、requirements.txt、pom.xml 猜）
+- **引导式背景**：项目是干嘛的 / 你什么角色 / 最担心哪方面 → 归纳成一句 `context`
+- 据背景提议：水平（小白 / 专家）、目标（MVP / 长线）
+- 特殊偏好 / 阈值调整 / 要 suppress 的项
 
-**产物 `.project-health/config.yml`**（工具中立；草案，字段最终在 setup 的 spec 里定）：
+**产物 `.project-health/config.yml`**（工具中立；完整 schema 以 setup 的 spec 为准）：
 ```yaml
-domain: [frontend, spring-backend, python-agent]   # 可多个
-level: expert            # beginner | expert
-goal: long-term          # mvp | long-term
+domain: [frontend]         # 检测+确认，可多个
+stack: [react, vite]       # 检测到的技术栈（信息用）
+level: expert              # beginner | expert
+goal: long-term            # mvp | long-term
+context: ""                # 一句话背景（干嘛的/角色/最担心什么）——报告据此来讲
 thresholds:
   file_warn: 400
   file_error: 800
   doc_warn: 500
+verify: "npm run build"    # fix 改代码后的兜底命令（v1 单条）
 doc_maintenance:
-  prompt_after_ops: true   # 操作后是否主动提醒维护文档（§十）
-project_rules:             # 项目专属硬规则（[专] 层）
-  - ...
-suppressions:              # "看着吓人其实没事"的沉淀（§八）
-  - id: large-file:gift-book-backend/.../GiftRecordService.java
-    reason: "已评估，当前阶段暂不拆分"
-    expires: "2026-09-01"
+  prompt_after_ops: false  # 操作后主动提醒维护文档（留给 hook，未来）
+project_rules: []          # 项目专属硬规则（[专] 层）= 未来"宪法"的落地字段
+suppressions: []           # "看着吓人其实没事"的沉淀（id + reason + expires）
 ```
+**谁读/谁写**：**setup** 生成并维护；**audit** 读 `thresholds`/`level`/`context`/`suppressions`；**fix** 读 `verify`、可追加 `suppressions`；**watch** 读 `doc_maintenance`（`context` 可选）。
 > 忽略清单不放这里，单独用根目录 `.project-healthignore`（仿 .gitignore，见 §八）。
 
 ---
