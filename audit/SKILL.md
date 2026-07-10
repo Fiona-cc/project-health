@@ -29,10 +29,10 @@ This is the `audit` sub-skill of the project-health suite. Full design: the proj
 
 ## Process
 
-1. **Load scan scope + config.** Apply built-in default ignores + `.project-healthignore` (if present). Read `.project-health/config.yml` for thresholds / `level` / `suppressions`, else use defaults. → see [references/code-rules.md](references/code-rules.md).
+1. **Load scan scope + config.** Apply built-in default ignores + `.project-healthignore` (if present). Read `.project-health/config.yml` for thresholds / `level` / `context` / `suppressions`, else use defaults. → see [references/code-rules.md](references/code-rules.md).
 2. **Run checks.** C1 & C3 (count lines) → C2 (extract refs, test existence) → C4 (git churn ∩ largest files; **skip silently if not a git repo**). Rules: C1/C4 in [references/code-rules.md](references/code-rules.md), C2/C3 in [references/doc-rules.md](references/doc-rules.md).
 3. **Apply suppressions.** Findings whose `id` matches a non-expired suppression move to the "看着吓人其实没事" section instead of being reported.
-4. **Assemble report** per [references/report-format.md](references/report-format.md) → write `.project-health/reports/audit-YYYY-MM-DD.md` **and** show inline.
+4. **Assemble report** per [references/report-format.md](references/report-format.md) — if `context` is set, frame the report around it; make clear that clean checks WERE run (not skipped) → write `.project-health/reports/audit-YYYY-MM-DD.md` **and** show inline.
 
 ## Defaults (override via `.project-health/config.yml`)
 

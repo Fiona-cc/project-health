@@ -20,17 +20,28 @@
 
 ---
 
-## 二、提问（只问检测不出来的，一次问清）
+## 二、提问（先引导用户描述背景，再据此提议 level/goal）
 
-集中成一小组：
-1. **水平**：小白 / 专家？→ 写 `level`。影响报告语气与详略。
-2. **目标**：MVP 快迭代 / 长线产品？→ 写 `goal`。影响阈值松紧。
-3. **特殊偏好**（可选）：
-   - 要不要调阈值？
-   - 有没有"某文件/文档故意很大、别报"？→ 直接进 `suppressions`（id + reason）。
-   - 有没有该忽略的目录？→ 提示可写 `.project-healthignore`。
+> **关键**：普通用户**想不到该交代背景**（只有 skill 作者才会主动说清）。所以**先用带例子的引导问题帮他说出来**，别一上来就冷问干巴巴的 level/goal。
 
-> 别车轮战：这一组问完就够，不要逐条无限追问。
+**第 1 步 · 引导式背景**（给例子，用户照着选/补即可）：
+- **这项目是干嘛的？** 例：生产系统 / 原型 demo / 内部工具 / 学习练手…
+- **谁在用、你是什么角色？** 例：自己 / 团队；开发 / 产品经理 / 设计…
+- **你最担心它哪方面？** 例：越改越乱 / 逻辑说不清 / 太慢 / 没人看得懂 / 文档跟不上…
+
+**第 2 步 · 据背景"猜后再问"**（不要冷问 level/goal，用背景**提议**、让用户点头）：
+- 从角色/担心推 `level`：如"产品经理 / 不写代码"→ 提议 **小白**；"资深开发"→ 提议 **专家**。
+- 从"是干嘛的"推 `goal`：如"原型 demo / 快迭代"→ 提议 **MVP**；"生产系统 / 长期维护"→ 提议 **长线**。
+- 把提议摆出来让用户**确认/改**。
+
+**第 3 步 · 忽略偏好**（可选）：
+- 有没有"某文件/文档故意很大、别报"？→ 进 `suppressions`（id + reason）。
+- 有没有该忽略的目录？→ 提示可写 `.project-healthignore`。
+
+**第 4 步 · 归纳 `context`**：把背景**压成一句话**写进 config 的 `context`（见 §四），供 audit/watch 的报告**围绕用户在意的点来讲**。
+例：`context: "PM 的前端 demo，用于审计汇报和研发沟通；数据为 mock；最担心多轮改需求后逻辑变乱、结构不清晰。"`
+
+> 别车轮战：背景 3 问 + 确认 level/goal + 忽略，这一轮问完就够，不要逐条无限追问。
 
 ---
 
@@ -50,6 +61,8 @@ domain: [frontend]          # 检测+确认，可多个
 stack: [react, vite]        # 检测到的技术栈（信息用）
 level: expert               # beginner | expert
 goal: long-term             # mvp | long-term
+context: ""                 # 一句话背景：项目是干嘛的 / 你的角色 / 最担心什么
+                            # audit/watch 报告据此围绕你在意的点来讲
 thresholds:
   file_warn: 400
   file_error: 800
@@ -62,7 +75,7 @@ project_rules: []           # 项目专属硬规则（预留）
 suppressions: []            # id + reason + expires
 ```
 
-- **谁写/谁读**：**setup 生成并维护**；**audit 只读**（`thresholds`/`level`/`suppressions`）；**fix 可追加 `suppressions`**；**watch（将来）读 `doc_maintenance`**。
+- **谁写/谁读**：**setup 生成并维护**；**audit 只读**（`thresholds`/`level`/`context`/`suppressions`）；**fix 可追加 `suppressions`**；**watch（将来）读 `doc_maintenance`**。
 - **缺字段回落默认**：保证 audit/fix 不依赖 setup 也能跑。
 - 只写 setup 认得的字段；不确定的字段留默认，别乱填。
 
