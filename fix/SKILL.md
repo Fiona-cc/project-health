@@ -29,8 +29,8 @@ Repairs the issues found by `project-health-audit`. **This skill writes code/doc
 
 | Tier | Types | How |
 |------|-------|-----|
-| 🟢 mechanical | F1 broken doc refs · F2 doc compaction/archive | do it directly, then show the diff |
-| 🟡 refactor | F3 split oversized file | **plan first → user confirms → edit → test → re-audit** |
+| 🟢 mechanical | F1 broken doc refs · **F2a archive-move**（把旧记录搬进 archive，**不改正文语义**） | do it directly, then show the diff |
+| 🟡 refactor | **F2b restructure**（重写/压缩/拆分长文档结构）· F3 split oversized file | **plan first → user confirms → edit → verify** |
 
 Rule details: [references/fix-rules.md](references/fix-rules.md).
 
