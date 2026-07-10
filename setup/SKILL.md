@@ -1,6 +1,6 @@
 ---
 name: project-health-setup
-description: Use when the user wants to set up or configure project-health for a project — triggers like "接入项目健康监控", "给项目做工程配置", "配置 project-health", "set up project health", usually once per project. Detects the project's background (domain/stack/verify) and writes .project-health/config.yml; suggests structure but does NOT create files.
+description: Use when the user wants to set up or configure project-health for a project — triggers like "接入项目健康监控", "给项目做工程配置", "配置 project-health", "set up project health", usually once per project. Detects the project's background (domain/stack/verify) and writes .project-health/config.yml; suggests structure but creates no business code or project scaffolding.
 ---
 
 # Project Health Setup
