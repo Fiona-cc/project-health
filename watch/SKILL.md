@@ -1,13 +1,13 @@
 ---
 name: project-health-watch
-description: Use when the user wants to see what CHANGED in a project's health since last time — triggers like "看最近新增了哪些问题", "最近项目健康有什么变化", "对比上次体检", "项目健康监控", "watch project health". Compares a fresh audit against a saved baseline and reports only the delta (new / resolved / remaining) plus doc drift. Read-only.
+description: Use when the user wants to see what CHANGED in a project's health since last time — triggers like "看最近新增了哪些问题", "最近项目健康有什么变化", "对比上次体检", "项目健康监控", "watch project health". Compares a fresh audit against a saved baseline and reports only the delta (new / resolved / remaining) plus doc drift. Never edits your code or project docs.
 ---
 
 # Project Health Watch
 
 ## Overview
 
-**Watch = audit with memory.** It sets a **baseline**, then on later runs reports **only what changed** since — 🆕 new / ✅ resolved / 🟰 remaining — so a long-lived project isn't re-scared with its whole issue list every time. Also flags docs that look **out of date** vs recently-changed code. **Read-only** (like audit; never edits).
+**Watch = audit with memory.** It sets a **baseline**, then on later runs reports **only what changed** since — 🆕 new / ✅ resolved / 🟰 remaining — so a long-lived project isn't re-scared with its whole issue list every time. Also flags docs that look **possibly out of date** vs recently-changed code. **It never touches your code or project docs**; the only things it writes are its own artifacts under `.project-health/` (a watch report; and — only when you explicitly say "接受现状 / 重置基线" — `baseline.md`).
 
 ## When to use
 
@@ -19,16 +19,16 @@ description: Use when the user wants to see what CHANGED in a project's health s
 ## Core principles
 
 1. **Report the delta, don't re-scare** — emphasize **new**; celebrate **resolved**; give **remaining** only as a count, not a re-listing.
-2. **Read-only** — watch only looks; fixing is `project-health-fix`.
+2. **Never touches your code/docs** — watch only reads your project; it writes only its own artifacts under `.project-health/` (the watch report always; `baseline.md` **only on explicit user confirmation**). Fixing is `project-health-fix`.
 3. **Respect suppressions** — a suppressed finding never counts as "new".
 4. **Baseline is updatable** — after clearing a batch, the user can set the current state as the new baseline ("accept current state").
 
 ## Process
 
-1. **Get baseline** — `.project-health/baseline.md` → else the latest `.project-health/reports/audit-*.md` → else this is the **first run**: run an audit and offer to save it as the baseline. See [references/watch-rules.md](references/watch-rules.md).
+1. **Get baseline** — `.project-health/baseline.md` → else the latest `.project-health/reports/audit-*.md` → else this is the **first run**: run an audit, show the result, and **ask whether to save it as `baseline.md`** — write it **only if the user confirms**; if they decline, just show this run and don't establish a baseline. See [references/watch-rules.md](references/watch-rules.md).
 2. **Fresh audit** — run the audit checks now (same engine/ids as `project-health-audit`).
 3. **Diff by finding id** (`<check>:<path>`): **new** = now∖baseline · **resolved** = baseline∖now · **remaining** = both.
-4. **Doc-drift check** — via git, find code changed in the last N days (default 14) whose related docs weren't updated; flag them (detection only — do not edit).
+4. **Doc-drift check** — via git, find code changed in the last N days (default 14) whose related docs weren't updated; flag them as **possibly out of sync — worth a look** (detection only, hedged — never claim the docs are definitely stale, and never edit them).
 5. **Report** — emphasize 🆕 new; write `.project-health/reports/watch-YYYY-MM-DD.md` + show inline. If nothing new, say "自基线以来无新增问题" (no padding).
 
 ## Report shape
@@ -37,7 +37,7 @@ description: Use when the user wants to see what CHANGED in a project's health s
 🆕 新增（n）  ← 重点，每条 file:line + 建议
 ✅ 已解决（m）
 🟰 遗留（k，未重复展开）
-📄 文档可能滞后（j）— 代码近期改过、文档未更新
+📄 文档可能未同步（j）— 相关代码近期改过、文档可能没跟上、建议看一眼
 基线：<来源与日期>
 ```
 
