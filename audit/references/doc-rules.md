@@ -45,10 +45,11 @@
 
 > 与路径检查相反：命令**要**扫 fenced code block 和反引号——因为 README 里的运行命令常写在代码块里（如 ```` ```bash\nnpm run build\n``` ````）。
 
-- 若仓库根**无 `package.json`** → 整项跳过命令检查（不报错）。
-- 在**代码块内和反引号内**提取形如 `npm run <script>` / `pnpm run <script>` / `yarn <script>` / `pnpm <script>` 的命令。
-- `<script>` 不在 `package.json` 的 `scripts` 键中 → 🔴 "文档引用了不存在的 npm 脚本"。
-- mvn/gradle/make 等其它命令体系：**本版不检查**（留给完整 Stage 1）。
+- 若仓库根**无 `package.json`**（或它损坏/非对象）→ 整项跳过命令检查（`skipped_checks`: `invalid_package_json`），不误报一片。
+- 在**代码块内和反引号内**只提取 `npm run <script>` / `pnpm run <script>` / `yarn run <script>`。
+  **v1 不查简写**（`yarn build` / `pnpm build`）——它们易和 `install` / `add` / `exec` 等内置命令混淆。
+- `<script>` 不在 `package.json` 的 `scripts` 键中 → 🔴。
+- mvn/gradle/make 等其它命令体系：**本版不检查**。
 
 **输出每条**：`<文档>:<行号> → <命令>` + "引用了不存在的脚本"。
 

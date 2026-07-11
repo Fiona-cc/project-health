@@ -60,14 +60,20 @@
 ```yaml
 schema_version: 1
 run:
-  id: "20260711T140230Z-8e5077f"   # 时间戳 + 短 commit（报告文件名同款，治同日覆盖）
-  timestamp: "2026-07-11T14:02:30Z"
-  commit: "8e5077f"
-  tool_version: "0.2.0"
+  id: "20260711T140230123Z-8e5077f"   # 时间戳(带毫秒) + 短 commit；报告文件名同款，同秒多跑不覆盖
+  timestamp: "2026-07-11T14:02:30.123Z"
+  commit: "8e5077f"                    # scanner 自取(git rev-parse)，非 git → null
+  tool_version: "0.3.0"
+effective_config:                # scanner 把生效配置回写进状态，报告层直接用、不再自读 config
+  level: standard
+  context: ""
+  thresholds: { file_warn: 400, file_error: 800, doc_warn: 500, churn_days: 180, churn_min: 3 }
 scan:
   files_scanned: 186
   docs_scanned: 8
   git: true
+  custom_ignore: false           # 是否有 .project-healthignore
+  custom_ignore_rules: 0
   skipped_checks:
     - check: C4
       reason: not_git_repository

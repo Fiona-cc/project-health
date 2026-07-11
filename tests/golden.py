@@ -33,8 +33,11 @@ EXPECTED = os.path.join(HERE, "expected")
 
 
 def scan_run(root):
-    return subprocess.run([sys.executable, SCAN, "--root", root, "--format", "yaml"],
-                          capture_output=True, text=True, encoding="utf-8")
+    cmd = [sys.executable, SCAN, "--root", root, "--format", "yaml"]
+    cfg = os.path.join(root, "_config.yml")   # fixture 配置放这（可提交，不被 .project-health/ gitignore 吃掉）
+    if os.path.isfile(cfg):
+        cmd += ["--config", cfg]
+    return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
 
 
 def scan_state(root):
@@ -105,6 +108,13 @@ def main():
         ok, detail = check_fixture(name)
         print(f"{'✅' if ok else '❌'} {name}" + ("" if ok else f": {detail}"))
         if not ok:
+            fails += 1
+    # 反向完整性：有 expected(.yml/.exit) 却没有对应 fixture 目录 → FAIL
+    fixset = set(names)
+    for f in sorted(os.listdir(EXPECTED)):
+        base = f.rsplit(".", 1)[0]
+        if base not in fixset:
+            print(f"❌ {f}: 有 expected 但缺对应 fixture 目录")
             fails += 1
     print(f"\n{'PASS' if not fails else 'FAIL'}（{fails} 失败 / {len(names)} fixture）")
     sys.exit(1 if fails else 0)

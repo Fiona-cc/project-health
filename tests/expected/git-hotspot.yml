@@ -12,6 +12,8 @@ scan:
   files_scanned: 2
   docs_scanned: 0
   git: true
+  custom_ignore: false
+  custom_ignore_rules: 0
   skipped_checks: []
 summary:
   error: 0

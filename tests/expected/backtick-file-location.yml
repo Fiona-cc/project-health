@@ -10,10 +10,10 @@ effective_config:
     churn_min: 3
 scan:
   files_scanned: 1
-  docs_scanned: 0
+  docs_scanned: 1
   git: false
-  custom_ignore: true
-  custom_ignore_rules: 2
+  custom_ignore: false
+  custom_ignore_rules: 0
   skipped_checks:
   - check: C4
     reason: not_repo_root
@@ -22,15 +22,17 @@ summary:
   warning: 0
   info: 0
 findings:
-- id: C1|large-file|src/big.js
-  check: C1
-  kind: large-file
-  subject: src/big.js
+- id: C2|broken-ref|docs/x.md|src/missing.py
+  check: C2
+  kind: broken-ref
+  subject: docs/x.md
   severity: error
-  category: production
-  fingerprint: sha256:5eda2ec89bb7cfbe
+  category: null
+  fingerprint: sha256:8f4d72b4deeecc7a
   evidence:
-    lines: 900
-  message_key: oversized_source_file
+    target: src/missing.py
+    locations:
+    - line: 5
+  message_key: broken_local_reference
 suppressed_findings: []
 expired_suppressions: []

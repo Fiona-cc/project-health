@@ -167,8 +167,11 @@ def load_config(root, config_path):
     level = loaded.get("level", "standard")
     if level not in LEVELS:
         die(EXIT_CONFIG, f"level 非法：{level}（应为 {sorted(LEVELS)}）。")
+    raw_th = loaded.get("thresholds") or {}
+    if not isinstance(raw_th, dict):
+        die(EXIT_CONFIG, "thresholds 必须是映射（键值对）。")
     th = dict(DEFAULTS["thresholds"])
-    for k, v in (loaded.get("thresholds") or {}).items():
+    for k, v in raw_th.items():
         if k in th:
             if not isinstance(v, int) or isinstance(v, bool) or v < 0:
                 die(EXIT_CONFIG, f"threshold {k} 必须是非负整数，得到 {v!r}。")
@@ -176,6 +179,8 @@ def load_config(root, config_path):
     if th["file_error"] < th["file_warn"]:
         die(EXIT_CONFIG, f"file_error({th['file_error']}) 不能小于 file_warn({th['file_warn']})。")
     supps = loaded.get("suppressions") or []
+    if not isinstance(supps, list):
+        die(EXIT_CONFIG, "suppressions 必须是列表。")
     seen = set()
     for s in supps:
         if not isinstance(s, dict) or not isinstance(s.get("id"), str) or not s["id"]:
@@ -221,6 +226,7 @@ def check_c1(root, files, th):
 DOC_ROOTS = ("README.md", "AGENTS.md", "CLAUDE.md")
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 BACKTICK_RE = re.compile(r"`([^`]+)`")
+LOC_SUFFIX_RE = re.compile(r":\d+(?::\d+)?$")   # 剥掉 file.py:42 / file.py:42:8 的定位后缀
 
 
 def doc_set(files):
@@ -299,11 +305,11 @@ def check_c2(root, docs, top_dirs, has_pkg, pkg_scripts, pkg_valid):
                         add(rel, script, i, "broken-command")
             if in_fence:
                 continue
-            # 反引号路径（保守，相对仓库根）
+            # 反引号路径（保守，相对仓库根；剥掉 :行:列 定位后缀）
             for m in BACKTICK_RE.finditer(raw):
-                tok = m.group(1).strip()
+                tok = LOC_SUFFIX_RE.sub("", m.group(1).strip().split("#", 1)[0])
                 if looks_like_repo_path(tok, top_dirs):
-                    r = _norm_join("", tok.split("#", 1)[0])
+                    r = _norm_join("", tok)
                     if r.startswith("..") or not os.path.exists(os.path.join(root, r)):
                         add(rel, r, i, "broken-ref")
             # markdown 链接（跳过反引号内），严格相对文档目录
@@ -423,6 +429,7 @@ def main():
 
     try:
         pats = load_ignore(root)
+        has_ignore = os.path.isfile(os.path.join(root, ".project-healthignore"))
         files = list(walk_files(root, pats))
         docs = doc_set(files)
         top_dirs = top_level_dirs(root)
@@ -478,7 +485,8 @@ def main():
             "effective_config": {"level": cfg["level"], "context": cfg.get("context", ""),
                                  "thresholds": th},
             "scan": {"files_scanned": src_scanned, "docs_scanned": len(docs),
-                     "git": is_git, "skipped_checks": skipped},
+                     "git": is_git, "custom_ignore": has_ignore,
+                     "custom_ignore_rules": len(pats), "skipped_checks": skipped},
             "summary": summary,
             "findings": live,
             "suppressed_findings": suppressed,
