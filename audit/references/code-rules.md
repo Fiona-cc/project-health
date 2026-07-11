@@ -16,7 +16,7 @@ node_modules/  dist/  build/  out/  target/  bin/  obj/  coverage/
   .war .class .pyc .so .dll .exe .bin .woff .woff2 .ttf .eot .mp4 .mp3
 ```
 
-**用户扩展**：若仓库根有 `.project-healthignore`（.gitignore 语法），叠加其规则。
+**用户扩展**：若仓库根有 `.project-healthignore`，叠加其规则。**v1 只支持"目录名/文件名"和"精确仓库相对路径"（及其子路径）**——**暂不支持完整 gitignore 语义**（`*` 通配、`!` 否定等）；将来要真支持,再引 `pathspec` 依赖(别自己手写)。
 
 **读取顺序**：默认忽略 → 叠加 `.project-healthignore` → 再跑各检查。
 

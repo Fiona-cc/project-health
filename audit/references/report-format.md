@@ -1,6 +1,29 @@
 # report-format.md — 报告模板 / 健康分 / 语气
 
-> audit v1 的输出规范。
+> audit v1 的输出规范。**报告不再靠 AI 现场扫，而是渲染 `scan.py` 写出的 `.project-health/state/latest-run.yml`。**
+
+---
+
+## 输入与渲染（从结构化状态出发）
+
+渲染只做三件事：**severity→emoji、message_key→人话（按 level）、算分**。
+
+**severity → emoji**：`error`→🔴 · `warning`→⚠️ · `info`→ℹ️。
+**分组**：`kind==hotspot` 单列 **🔥 危险热点** 一节；其余 `info`（测试/样式/数据大文件）列 **ℹ️ 信息**。
+
+**message_key → 人话**（按 `level` 展开；数据取自 `evidence`）：
+
+| message_key | 简明（standard） | 建议 |
+|---|---|---|
+| oversized_source_file | 文件过大（`lines` 行），改动风险高 | 按职责拆分为多个文件/类 |
+| broken_local_reference | 文档指向不存在的路径 `target` | 改成正确路径或删除该引用 |
+| broken_npm_script | 文档引用了不存在的 npm 脚本 `target` | 改成 package.json 里真有的脚本 |
+| oversized_doc | 文档过长（`lines` 行） | 拆分/压缩；旧记录归档为一句话 |
+| debt_hotspot | 又大又常改（`lines` 行 / 近改 `churn` 次） | 优先关注/拆分 |
+
+- 定位：纯文本 `subject:line`，行号取自 `evidence.locations`（多处就列多个）。
+- `suppressed_findings` → "看着吓人其实没事"一节；`expired_suppressions` → 提示"抑制已到期，重新计入"。
+- `scan.skipped_checks` → 在"扫描范围"说明（如 非 git 仓 C4 跳过 / 坏 package.json 命令检查跳过）。
 
 ---
 
@@ -25,12 +48,11 @@
 
 ## 简版健康分（仅供感知，不是 KPI）
 
-从 100 分起扣：
-- 每个 🔴：**-6**
-- 每个 ⚠️：**-2**
+从 100 分起扣（数据取自 `summary` counts）：
+- 每个 `error`（🔴）：**-6**
+- 每个 `warning`（⚠️）：**-2**
 - 下限 0。
-- C4 热点**不计分**（它是优先级提示，不是新问题；避免与 C1 重复扣分）。
-- ℹ️ **非生产代码（测试/样式/数据）不计分**（仅提示）——避免正常偏长的测试/样式文件拖累"生产健康"的感知。
+- `info`（ℹ️，含 🔥 热点 + 测试/样式/数据大文件）**不计分**——热点是优先级提示、非生产代码是正常偏长，都不该拖累"生产健康"感知。
 
 报告顶部一行展示，并**明确标注**"仅供快速感知，不是考核指标；行动项才是主角"。
 

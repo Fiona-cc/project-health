@@ -127,8 +127,10 @@ constitution:
 
 **调用**：
 ```bash
-python audit/scripts/scan.py --root <项目根> [--config <path>] [--output <state-path>] [--format yaml|json] [--no-report]
+python audit/scripts/scan.py --root <项目根> [--config <path>] [--output <state-path>] [--format yaml|json]
 ```
+- **`commit` 由脚本自取**（`git rev-parse --short HEAD`；非 git → `null`），**不由 agent 传入**（否则 Claude 传了/Codex 忘传，状态就不一致）。
+- scanner **只产状态、不生成报告**，故无 `--no-report`。
 
 **运行时**：Python **≥3.8** + **PyYAML**（读/写 YAML）。运行前 `import yaml` 检查；**缺则明确提示安装、不自动 pip install、不静默降级**（不自己手写 YAML parser——那是新 bug 源）。
 

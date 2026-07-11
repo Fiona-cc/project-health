@@ -7,7 +7,7 @@ description: Use when the user wants a read-only engineering health checkup of a
 
 ## Overview
 
-Read-only engineering health checkup. Scans a project and produces a **file-cited** report of the highest-signal maintainability problems, so rot gets caught before the code becomes unchangeable. **Never edits code or docs.**
+Read-only engineering health checkup. It runs a bundled **deterministic scanner** (`scripts/scan.py`) so the **same code yields the same findings on any agent/platform**; the skill then interprets the structured results and writes a **file-cited** report of the highest-signal maintainability problems. **Never edits code or docs.**
 
 This is the `audit` sub-skill of the project-health suite. Full design: the project's `blueprint.md` / `stage-1-audit.md` spec.
 
@@ -29,10 +29,17 @@ This is the `audit` sub-skill of the project-health suite. Full design: the proj
 
 ## Process
 
-1. **Load scan scope + config.** Apply built-in default ignores + `.project-healthignore` (if present). Read `.project-health/config.yml` for thresholds / `level` / `context` / `suppressions`, else use defaults. → see [references/code-rules.md](references/code-rules.md).
-2. **Run checks.** C1 & C3 (count lines) → C2 (extract refs, test existence) → C4 (git churn ∩ largest files; **skip silently if not a git repo**). Rules: C1/C4 in [references/code-rules.md](references/code-rules.md), C2/C3 in [references/doc-rules.md](references/doc-rules.md).
-3. **Apply suppressions.** Findings whose `id` matches a non-expired suppression move to the "看着吓人其实没事" section instead of being reported.
-4. **Assemble report** per [references/report-format.md](references/report-format.md) — if `context` is set, frame the report around it; make clear that clean checks WERE run (not skipped) → write `.project-health/reports/audit-YYYY-MM-DD.md` **and** show inline.
+1. **Run the bundled deterministic scanner** (the single source of truth — do **not** hand-scan). Ensure Python **≥3.8 + PyYAML**; then run this skill's `scripts/scan.py`:
+   ```
+   python <this-skill-dir>/scripts/scan.py --root <project-root> --output <project-root>/.project-health/state/latest-run.yml
+   ```
+   - On **non-zero exit, explain by code and STOP** — never fall back to improvising the scan:
+     `2` = config error · `3` = Python/PyYAML missing (tell the user to `pip install pyyaml`; do NOT auto-install) · `4` = bad root · `5` = internal.
+   - **Never re-compute C1–C4 yourself via shell / grep / find / git** — that reintroduces per-agent inconsistency. The scanner is authoritative; the scanner commits `commit` itself (agents don't pass it).
+2. **Read the structured state** `latest-run.yml`: `summary`, `findings`, `suppressed_findings`, `expired_suppressions`, `scan.skipped_checks`.
+3. **Render the report** per [references/report-format.md](references/report-format.md): map each finding's `message_key` → 人话 (by `level`), `severity` → 🔴/⚠️/ℹ️, compute the score **at this layer**, and state scan scope + any skipped checks (so "查过没问题" is visible). If `context` is set, frame the report around it. Write `.project-health/reports/audit-<run.id>.md` **and** show inline.
+
+> `references/code-rules.md` / `doc-rules.md` now **document what the scanner does** (the check spec), not runtime shell instructions.
 
 ## Defaults (override via `.project-health/config.yml`)
 
@@ -40,7 +47,7 @@ This is the `audit` sub-skill of the project-health suite. Full design: the proj
 
 ## Core principles
 
-- **Deterministic only.** Line counts, path-existence, git history — no guessing. Every finding cites `file:line`.
-- **Conservative on C2.** Never flag a plain word as a broken path. Prefer under-reporting over false alarms — one bogus "broken link" and the user stops trusting the tool.
+- **Deterministic via the scanner.** All C1–C4 measurement lives in `scripts/scan.py` (single source of truth). The skill **never re-derives findings by hand** — it only interprets the scanner's structured output.
+- **Conservative on C2.** Markdown links are resolved by markdown semantics (relative to the doc); a real broken link is flagged, but plain prose words are never mistaken for paths.
 - **No padding.** If nothing is material, say "未发现实质问题". Never recommend rewrites.
 - **Score is for perception, not a KPI.** The action items are the point.
