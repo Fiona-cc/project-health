@@ -1,0 +1,39 @@
+schema_version: 1
+scan:
+  files_scanned: 1
+  docs_scanned: 1
+  git: false
+  skipped_checks:
+  - check: C4
+    reason: not_repo_root
+summary:
+  error: 2
+  warning: 0
+  info: 0
+findings:
+- id: C2|broken-ref|docs/guide.md|docs/install.md
+  check: C2
+  kind: broken-ref
+  subject: docs/guide.md
+  severity: error
+  category: null
+  fingerprint: sha256:0bb97316aca28ad9
+  evidence:
+    target: docs/install.md
+    locations:
+    - line: 7
+  message_key: broken_local_reference
+- id: C2|broken-ref|docs/guide.md|docs/src/api.ts
+  check: C2
+  kind: broken-ref
+  subject: docs/guide.md
+  severity: error
+  category: null
+  fingerprint: sha256:de84e64e972a575a
+  evidence:
+    target: docs/src/api.ts
+    locations:
+    - line: 3
+  message_key: broken_local_reference
+suppressed_findings: []
+expired_suppressions: []

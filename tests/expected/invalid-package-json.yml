@@ -1,0 +1,17 @@
+schema_version: 1
+scan:
+  files_scanned: 0
+  docs_scanned: 1
+  git: false
+  skipped_checks:
+  - check: C2-command
+    reason: invalid_package_json
+  - check: C4
+    reason: not_repo_root
+summary:
+  error: 0
+  warning: 0
+  info: 0
+findings: []
+suppressed_findings: []
+expired_suppressions: []

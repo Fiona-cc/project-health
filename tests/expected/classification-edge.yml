@@ -1,0 +1,55 @@
+schema_version: 1
+scan:
+  files_scanned: 4
+  docs_scanned: 0
+  git: false
+  skipped_checks:
+  - check: C4
+    reason: not_repo_root
+summary:
+  error: 0
+  warning: 2
+  info: 2
+findings:
+- id: C1|large-file|src/contest.py
+  check: C1
+  kind: large-file
+  subject: src/contest.py
+  severity: warning
+  category: production
+  fingerprint: sha256:2b8d4f742fb62af4
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: C1|large-file|src/data.mock.js
+  check: C1
+  kind: large-file
+  subject: src/data.mock.js
+  severity: info
+  category: data
+  fingerprint: sha256:bd8d4ce3d564b15f
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: C1|large-file|src/foo.test.ts
+  check: C1
+  kind: large-file
+  subject: src/foo.test.ts
+  severity: info
+  category: test
+  fingerprint: sha256:5d119d2fbfae089e
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: C1|large-file|src/latest.py
+  check: C1
+  kind: large-file
+  subject: src/latest.py
+  severity: warning
+  category: production
+  fingerprint: sha256:9caa37200be32cd3
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+suppressed_findings: []
+expired_suppressions: []
