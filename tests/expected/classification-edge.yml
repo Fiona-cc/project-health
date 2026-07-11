@@ -1,6 +1,15 @@
 schema_version: 1
+effective_config:
+  level: standard
+  context: ''
+  thresholds:
+    file_warn: 400
+    file_error: 800
+    doc_warn: 500
+    churn_days: 180
+    churn_min: 3
 scan:
-  files_scanned: 4
+  files_scanned: 7
   docs_scanned: 0
   git: false
   skipped_checks:
@@ -8,9 +17,39 @@ scan:
     reason: not_repo_root
 summary:
   error: 0
-  warning: 2
-  info: 2
+  warning: 3
+  info: 4
 findings:
+- id: C1|large-file|src/FooTest.java
+  check: C1
+  kind: large-file
+  subject: src/FooTest.java
+  severity: info
+  category: test
+  fingerprint: sha256:af6ed04326587665
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: C1|large-file|src/UserTests.java
+  check: C1
+  kind: large-file
+  subject: src/UserTests.java
+  severity: info
+  category: test
+  fingerprint: sha256:fa0c5019363439be
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: C1|large-file|src/Widget.java
+  check: C1
+  kind: large-file
+  subject: src/Widget.java
+  severity: warning
+  category: production
+  fingerprint: sha256:9d26373b92398348
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
 - id: C1|large-file|src/contest.py
   check: C1
   kind: large-file

@@ -29,7 +29,7 @@
 
 ## 落盘 + 内联
 
-- 写入 `.project-health/reports/audit-YYYY-MM-DD.md`（若 config 指定别的路径则用之）。
+- 写入 `.project-health/reports/audit-<run.id>.md`（`run.id` 取自 scanner 状态，带时间戳+commit，**同秒多跑不覆盖**）。
 - 同时在对话里内联展示。
 - 日期用当前日期。
 

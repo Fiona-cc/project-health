@@ -24,17 +24,18 @@ node_modules/  dist/  build/  out/  target/  bin/  obj/  coverage/
 
 ## config 读取（阈值 / level / suppressions）
 
-找 `.project-health/config.yml`。存在则用其值，缺失字段回落默认：
+找 `.project-health/config.yml`。**scanner 读取并校验**（非法→退出码 2）；缺失字段回落默认：
 ```yaml
-thresholds: { file_warn: 400, file_error: 800, doc_warn: 500 }
-level: expert            # beginner | expert；缺省=中间档
+schema_version: 1
+thresholds: { file_warn: 400, file_error: 800, doc_warn: 500, churn_days: 180, churn_min: 3 }
+level: standard          # beginner | standard | expert
 suppressions:
-  - id: "large-file:<repo相对路径>"
+  - id: "C1|large-file|<repo相对路径>"   # = finding 的 stable id（见数据契约）
     reason: "..."
     expires: "YYYY-MM-DD"
 ```
 - 读不到文件 → 全用默认，`suppressions` 为空。
-- `suppressions` 生效见 SKILL.md 第 3 步；`id` 约定 `<check>:<repo相对路径>`，C1 的前缀为 `large-file`。
+- **`suppressions` 由 scanner 应用**（命中 → 进 `suppressed_findings`，过期 → 照常进 `findings` + `expired_suppressions`）；`id` = finding 的 stable id，如 `C1|large-file|src/Foo.js`。
 
 ---
 
@@ -86,15 +87,12 @@ suppressions:
 
 ## C4 · 危险热点（大文件 × 高频改动）
 
-**前提**：当前目录是 git 仓库（`git rev-parse --is-inside-work-tree` 为真）。否则**整项跳过**，并在报告"扫描范围"里注明"非 git 仓，C4 跳过"。
+**前提（与 scanner 一致）**：root 必须是 **git 仓库根**（`git rev-parse --show-toplevel` == root）。否则整项跳过，`skipped_checks` 记 `not_git_repository` / `not_repo_root`；`git log` 失败记 `git_log_failed`（不静默给"无热点"）。
 
-**步骤**：
-1. **改动频次**：近 6 个月每文件被改次数。
-   示例：`git log --since="6 months ago" --name-only --pretty=format: -- . | sort | uniq -c | sort -rn`
-   （过滤掉已忽略路径与已删除文件。）取 top-15 → 集合 A。
-2. **大文件**：复用 C1 的行数，取行数最多的 top-15（只在源码白名单内）→ 集合 B。
-3. **交集** A ∩ B = 又大又常改 → ⚠️ 热点。
-
-**输出每条**：`<repo相对路径>`（近半年改 N 次 / M 行）+ "技术债高发区：改动频繁且体量大，建议优先关注/拆分"。
+**步骤（绝对阈值 + 评分，非相对 top-N）**：
+1. **改动频次**：近 `churn_days`（默认 180）天每文件被改次数（`git -c core.quotepath=false log --since --name-only -z`，中文路径不出错）。
+2. **候选**：`行数≥file_warn AND churn≥churn_min`（默认 3）才是热点候选；排除 generated。
+3. **评分**：`score = 行数 × churn` 进 evidence；报告层按 score 取 top-N（只控制展示数量，不决定是不是问题）。
+4. **severity=info**：热点是优先级提示，报告**单列 🔥、不计分**。
 
 > 热点不额外扣分（避免和 C1 重复计分）；它是"优先级提示"，在报告里单列一节。

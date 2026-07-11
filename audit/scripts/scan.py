@@ -82,18 +82,20 @@ def total_lines(path):
 
 
 def classify(rel):
-    parts = rel.lower().split("/")
-    name = parts[-1]
-    dirs = parts[:-1]
+    parts = rel.split("/")
+    orig_name = parts[-1]
+    low_parts = [p.lower() for p in parts]
+    name = low_parts[-1]
+    dirs = low_parts[:-1]
     ext = os.path.splitext(name)[1]
-    # 测试：明确边界，不用任意子串（避免 latest.py / contest.py 误伤）
+    # 测试：明确模式（避免 latest.py / contest.py 误伤，同时认 Java 驼峰 FooTest.java）
     is_test = (
         any(d in ("test", "tests", "__tests__") for d in dirs)
         or name.startswith("test_")
         or "_test." in name
         or ".test." in name
         or ".spec." in name
-        or re.search(r"(?:^|[._-])tests?\.[^.]+$", name)   # foo.test.js / FooTest.java 尾部，需前有分隔符
+        or re.search(r"(?:Test|Tests)\.[^.]+$", orig_name)   # 驼峰，区分大小写：FooTest.java / UserTests.java
     )
     if is_test:
         return "test"
@@ -151,7 +153,8 @@ def walk_files(root, pats):
 def load_config(root, config_path):
     cfg_path = config_path or os.path.join(root, ".project-health", "config.yml")
     if not os.path.isfile(cfg_path):
-        return dict(DEFAULTS), dict(DEFAULTS["thresholds"])
+        th = dict(DEFAULTS["thresholds"])
+        return {"level": "standard", "context": "", "thresholds": th, "suppressions": []}, th
     try:
         loaded = yaml.safe_load(open(cfg_path, encoding="utf-8")) or {}
     except yaml.YAMLError as e:
@@ -186,7 +189,7 @@ def load_config(root, config_path):
                 datetime.strptime(str(exp), "%Y-%m-%d")
             except ValueError:
                 die(EXIT_CONFIG, f"suppression {s['id']} 的 expires 非法日期：{exp!r}（应 YYYY-MM-DD）。")
-    return {"level": level, "thresholds": th, "suppressions": supps}, th
+    return {"level": level, "context": loaded.get("context") or "", "thresholds": th, "suppressions": supps}, th
 
 
 # ---- C1 ------------------------------------------------------------------
@@ -248,8 +251,8 @@ def resolve_md_link(root, ddir, target):
     """markdown link 语义：`/x`→仓库根；其余→严格相对文档目录；不再 fallback 到根。
     返回 (repo相对目标, exists) 或 None（外链/锚点/非本地）。"""
     path = target.strip().split("#", 1)[0]
-    if not path or path.startswith(("http://", "https://", "mailto:")):
-        return None
+    if not path or path.startswith("//") or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", path):
+        return None   # 排除任何 scheme:（http/mailto/tel/data/file/vscode…）与协议相对 //host
     if path.startswith("/"):
         rel = path.lstrip("/")
     else:
@@ -260,17 +263,8 @@ def resolve_md_link(root, ddir, target):
 
 
 def extract_commands(line):
-    """npm/pnpm/yarn 的 run <script> 与 yarn/pnpm <script> 简写。返回 script 名列表。"""
-    out = []
-    for m in re.finditer(r"\b(npm|pnpm|yarn)\s+([\w:./-]+)(?:\s+([\w:./-]+))?", line):
-        mgr, a, b = m.group(1), m.group(2), m.group(3)
-        if a == "run":
-            if b:
-                out.append(b)
-        elif mgr in ("yarn", "pnpm"):   # 简写：yarn build / pnpm build
-            out.append(a)
-        # npm <x>（x!=run）不是脚本调用，忽略
-    return out
+    """v1 只稳定检查 `npm/pnpm/yarn run <script>`；简写(yarn build)歧义大、会撞内置命令(install/add/exec…)，不查。"""
+    return re.findall(r"\b(?:npm|pnpm|yarn)\s+run\s+([\w:./-]+)", line)
 
 
 def looks_like_repo_path(tok, top_dirs):
@@ -369,6 +363,8 @@ def check_c4(root, files, th):
         ["git", "-c", "core.quotepath=false", "-C", root, "log",
          f"--since={th['churn_days']} days ago", "--name-only", "-z", "--pretty=format:"],
         capture_output=True, text=True)
+    if r.returncode != 0:
+        return None   # git log 失败 → 交调用方标 skipped，不静默给"没热点"
     churn = {}
     for name in r.stdout.split("\0"):
         name = name.strip()
@@ -435,8 +431,14 @@ def main():
         pkg_valid, pkg_scripts = True, set()
         if has_pkg:
             try:
-                pkg_scripts = set((json.load(open(pkg, encoding="utf-8")).get("scripts") or {}).keys())
-            except (json.JSONDecodeError, OSError):
+                data = json.load(open(pkg, encoding="utf-8"))
+                if not isinstance(data, dict):
+                    raise ValueError("package.json 顶层不是对象")
+                scripts = data.get("scripts") or {}
+                if not isinstance(scripts, dict):
+                    raise ValueError("scripts 不是对象")
+                pkg_scripts = set(scripts.keys())
+            except (json.JSONDecodeError, OSError, ValueError):
                 pkg_valid = False
 
         skipped = []
@@ -449,7 +451,11 @@ def main():
 
         is_git, git_reason, commit = git_state(root)
         if is_git:
-            findings += check_c4(root, files, th)
+            c4 = check_c4(root, files, th)
+            if c4 is None:
+                skipped.append({"check": "C4", "reason": "git_log_failed"})
+            else:
+                findings += c4
         else:
             skipped.append({"check": "C4", "reason": git_reason})
 
@@ -462,11 +468,15 @@ def main():
             summary[f["severity"]] += 1
 
         now = datetime.now(timezone.utc)
-        run_id = now.strftime("%Y%m%dT%H%M%SZ") + ("-" + commit if commit else "")
+        ms = f"{now.microsecond // 1000:03d}"
+        run_id = now.strftime("%Y%m%dT%H%M%S") + ms + "Z" + ("-" + commit if commit else "")
         state = {
             "schema_version": 1,
-            "run": {"id": run_id, "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "run": {"id": run_id,
+                    "timestamp": now.strftime("%Y-%m-%dT%H:%M:%S.") + ms + "Z",
                     "commit": commit, "tool_version": TOOL_VERSION},
+            "effective_config": {"level": cfg["level"], "context": cfg.get("context", ""),
+                                 "thresholds": th},
             "scan": {"files_scanned": src_scanned, "docs_scanned": len(docs),
                      "git": is_git, "skipped_checks": skipped},
             "summary": summary,

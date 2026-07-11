@@ -1,0 +1,54 @@
+schema_version: 1
+effective_config:
+  level: standard
+  context: ''
+  thresholds:
+    file_warn: 400
+    file_error: 800
+    doc_warn: 500
+    churn_days: 180
+    churn_min: 3
+scan:
+  files_scanned: 2
+  docs_scanned: 0
+  git: true
+  skipped_checks: []
+summary:
+  error: 0
+  warning: 2
+  info: 1
+findings:
+- id: C1|large-file|src/cold.js
+  check: C1
+  kind: large-file
+  subject: src/cold.js
+  severity: warning
+  category: production
+  fingerprint: sha256:1a26155ab485b6b2
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: C1|large-file|src/hot.js
+  check: C1
+  kind: large-file
+  subject: src/hot.js
+  severity: warning
+  category: production
+  fingerprint: sha256:699ef40ab0429442
+  evidence:
+    lines: 503
+  message_key: oversized_source_file
+- id: C4|hotspot|src/hot.js
+  check: C4
+  kind: hotspot
+  subject: src/hot.js
+  severity: info
+  category: null
+  fingerprint: sha256:4f9b52c258d04d34
+  evidence:
+    lines: 503
+    churn: 4
+    score: 2012
+  message_key: debt_hotspot
+suppressed_findings: []
+expired_suppressions: []
