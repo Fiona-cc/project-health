@@ -68,7 +68,7 @@ def npath(root, abspath):
 def nonempty_lines(path):
     try:
         with open(path, encoding="utf-8", errors="replace") as f:
-            return sum(1 for line in f if line.rstrip("\r").strip())   # CRLF/LF 都算一样
+            return sum(1 for line in f if line.strip())
     except OSError:
         return 0
 
