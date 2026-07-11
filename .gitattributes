@@ -1,5 +1,5 @@
-# Fixture / test / script files must be LF for cross-platform identical golden output.
-tests/**/*.js tests/**/*.py tests/**/*.ts tests/**/*.java tests/**/*.css tests/**/*.sh text eol=lf
-tests/**/*.md tests/**/*.yml tests/**/*.yaml tests/**/*.json tests/**/*.exit tests/**/*.txt text eol=lf
+# Fixture / test / script files must be LF for cross-platform reproducibility.
+tests/* text eol=lf
+tests/** text eol=lf
 audit/scripts/*.py text eol=lf
 *.md text eol=lf
