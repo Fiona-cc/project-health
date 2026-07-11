@@ -1,0 +1,90 @@
+schema_version: 1
+scan:
+  files_scanned: 5
+  docs_scanned: 3
+  git: false
+  skipped_checks:
+  - check: C4
+    reason: not_repo_root
+summary:
+  error: 3
+  warning: 2
+  info: 2
+findings:
+- id: C1|large-file|src/big.js
+  check: C1
+  kind: large-file
+  subject: src/big.js
+  severity: error
+  category: production
+  fingerprint: sha256:5eda2ec89bb7cfbe
+  evidence:
+    lines: 900
+  message_key: oversized_source_file
+- id: C1|large-file|src/foo.test.js
+  check: C1
+  kind: large-file
+  subject: src/foo.test.js
+  severity: info
+  category: test
+  fingerprint: sha256:9a844264aad93f4b
+  evidence:
+    lines: 900
+  message_key: oversized_source_file
+- id: C1|large-file|src/styles.css
+  check: C1
+  kind: large-file
+  subject: src/styles.css
+  severity: info
+  category: style
+  fingerprint: sha256:c6a01ad110887f6f
+  evidence:
+    lines: 700
+  message_key: oversized_source_file
+- id: C1|large-file|src/utils.js
+  check: C1
+  kind: large-file
+  subject: src/utils.js
+  severity: warning
+  category: production
+  fingerprint: sha256:83ea7b7ece2eee10
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: C2|broken-command|README.md|nope
+  check: C2
+  kind: broken-command
+  subject: README.md
+  severity: error
+  category: null
+  fingerprint: sha256:5c3aecd579486ba3
+  evidence:
+    target: nope
+    locations:
+    - line: 11
+  message_key: broken_npm_script
+- id: C2|broken-ref|README.md|missing.md
+  check: C2
+  kind: broken-ref
+  subject: README.md
+  severity: error
+  category: null
+  fingerprint: sha256:954038f8d9f8dd48
+  evidence:
+    target: missing.md
+    locations:
+    - line: 3
+    - line: 14
+  message_key: broken_local_reference
+- id: C3|oversized-doc|docs/long.md
+  check: C3
+  kind: oversized-doc
+  subject: docs/long.md
+  severity: warning
+  category: null
+  fingerprint: sha256:95f140c97ca1a8be
+  evidence:
+    lines: 600
+  message_key: oversized_doc
+suppressed_findings: []
+expired_suppressions: []
