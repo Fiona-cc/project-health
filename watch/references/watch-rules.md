@@ -7,26 +7,26 @@
 ## 一、基线（baseline）来源与优先级
 
 按顺序取第一个：
-1. **`.project-health/baseline.md`** —— 显式基线（用户"接受现状"时存的），最稳。
-2. **`.project-health/reports/audit-*.md`** 里**最近一次**报告 —— 没有显式基线就用它当参照。
-3. **都没有 → 第一次运行**：先跑一次 audit，**展示结果**，并**询问用户是否存成 `baseline.md`**；**用户确认才写**，不确认就**只展示本次结果、不自动立基线**。
+1. **`.project-health/state/baseline.yml`** —— 显式基线（用户"接受现状"时存的），最稳。
+2. **`.project-health/state/latest-run.yml`** —— 没有显式基线就用最近一次扫描状态当参照。
+3. **都没有 → 第一次运行**：先跑 `project-health-audit`（产出 `latest-run.yml`），**展示结果**，并**询问用户是否存成 `baseline.yml`**；**用户确认才写**，不确认就**只展示本次结果、不自动立基线**。
 
-**更新基线**：用户说"接受现状 / 重置基线" → 把当前 audit 结果写成新的 `baseline.md`（旧的可覆盖）。
-
-**基线里存什么**：每条发现的 **id + 类型 + 严重度**（足够比对即可，不必存全文）。
+**更新基线**：用户说"接受现状 / 重置基线" → 把当前 `latest-run.yml` 复制为新的 `baseline.yml`。
 
 ---
 
-## 二、增量比对（按发现的稳定 id）
+## 二、增量比对（脚本确定性执行，不再手算）
 
-- 发现 id = `<check>:<repo相对路径>`（与 audit/suppressions 同一套）。
-  - `<check>` ∈ `large-file` / `broken-ref` / `oversized-doc` / `hotspot` …
-- 跑一次**新 audit** → 当前发现集合 `NOW`；基线集合 `BASE`。
-- 分三类：
-  - **🆕 新增** = `NOW ∖ BASE`（当前有、基线没有）→ 重点报，带 file:line + 建议。
-  - **✅ 已解决** = `BASE ∖ NOW`（基线有、当前没有）→ 报喜。
-  - **🟰 遗留** = `NOW ∩ BASE`（两边都有）→ **只给数量**，不重复展开细节。
-- **尊重 suppressions**：命中 suppression 的项，不算"新增"（并入"看着吓人其实没事"，不打扰）。
+**调用 `scripts/compare.py <baseline.yml> <latest-run.yml>`**——按 `finding.id`（稳定身份）比对，输出结构化 delta。
+
+- 分类：
+  - **🆕 新增（new）**：latest 有、baseline 没有
+  - **✅ 已解决（resolved）**：baseline 有、latest 没有
+  - **🟰 遗留（remaining）**：两边都有（只给数量，不重复展开每条细节）
+  - **⬆️ 严重度升级（escalated）**：同 id，severity 升高（⚠️→🔴）
+  - **⬇️ 严重度降级（de-escalated）**：同 id，severity 下降（🔴→⚠️）
+  - **📝 证据变化（evidence_changed）**：同 id，fingerprint 变了
+- **尊重 suppressions**：命中 suppression 的项已由 scan.py 移入 `suppressed_findings`，不在 `latest-run.yml` 的 `findings` 中，不会算进新增。
 
 ---
 

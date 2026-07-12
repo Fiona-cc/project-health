@@ -25,11 +25,11 @@ description: Use when the user wants to see what CHANGED in a project's health s
 
 ## Process
 
-1. **Get baseline** — `.project-health/baseline.md` → else the latest `.project-health/reports/audit-*.md` → else this is the **first run**: run an audit, show the result, and **ask whether to save it as `baseline.md`** — write it **only if the user confirms**; if they decline, just show this run and don't establish a baseline. See [references/watch-rules.md](references/watch-rules.md).
-2. **Fresh audit** — run the audit checks now (same engine/ids as `project-health-audit`).
-3. **Diff by finding id** (`<check>:<path>`): **new** = now∖baseline · **resolved** = baseline∖now · **remaining** = both.
+1. **Get or create a baseline** — `.project-health/state/baseline.yml` → else use the latest `.project-health/state/latest-run.yml` as reference → else this is the **first run**: run a `project-health-audit` first, show the result, and **ask whether to save the state as `baseline.yml`** — write it **only if the user confirms**; if they decline, just show this run and don't establish a baseline.
+2. **Fresh audit** — run `project-health-audit` now (this produces `.project-health/state/latest-run.yml` with the current structured findings).
+3. **Run the bundled comparator** — call `scripts/compare.py <baseline.yml> <latest-run.yml>`. The output is structured YAML (fire-and-forget — no hand-diffing). If Python/PyYAML are missing, explain which package is needed, then stop.
 4. **Doc-drift check** — via git, find code changed in the last N days (default 14) whose related docs weren't updated; flag them as **possibly out of sync — worth a look** (detection only, hedged — never claim the docs are definitely stale, and never edit them).
-5. **Report** — emphasize 🆕 new; write `.project-health/reports/watch-YYYY-MM-DD.md` + show inline. If nothing new, say "自基线以来无新增问题" (no padding).
+5. **Report** — render the structured delta + doc-drift result: emphasize 🆕 new; write `.project-health/reports/watch-YYYY-MM-DD.md` + show inline. If nothing new, say "自基线以来无新增问题" (no padding).
 
 ## Report shape
 
