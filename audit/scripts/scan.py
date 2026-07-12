@@ -393,6 +393,65 @@ def check_c4(root, files, th):
     return out
 
 
+# ---- C5 · 宪法 -----------------------------------------------------------
+CON_DETERMINISTIC_KINDS = {
+    "max_file_lines", "forbidden_path", "required_path",
+    "required_file_pair", "forbidden_dependency", "naming_pattern",
+}
+
+_sev_map = {"error": "error", "warning": "warning", "info": "info"}
+
+
+def _glob_match(pattern, rel):
+    """Simple glob: **跨任意目录，*匹配单层非斜杠。"""
+    import fnmatch
+    return fnmatch.fnmatch(rel, pattern)
+
+
+def check_c5(root, files, constitution_path):
+    cpath = os.path.join(root, constitution_path.removeprefix("./"))
+    if not os.path.isfile(cpath):
+        return [], None   # 无宪法 → 不报错（不是每个项目都有）
+    try:
+        c = yaml.safe_load(open(cpath, encoding="utf-8")) or {}
+    except (yaml.YAMLError, OSError):
+        return [], {"check": "CON", "reason": "invalid_constitution"}
+    rules = c.get("rules") or []
+    out = []
+    for r in rules:
+        ek = (r.get("enforcement") or {}).get("kind")
+        if ek not in CON_DETERMINISTIC_KINDS:
+            continue   # manual_review / 未知 → 不执行
+        sev = _sev_map.get(r.get("severity"), "info")
+        sid = f"CON|{r['id']}"
+        ev = {}
+        if ek == "max_file_lines":
+            val = (r.get("enforcement") or {}).get("value")
+            if not isinstance(val, int) or val < 1:
+                continue
+            globs = ([r["applies_to"]] if isinstance(r.get("applies_to"), str) else
+                     r.get("applies_to") or None)
+            for rel, ab in files:
+                ext = os.path.splitext(rel)[1].lower()
+                if ext not in SOURCE_EXT:
+                    continue
+                if globs and not any(_glob_match(g, rel) for g in globs):
+                    continue
+                n = nonempty_lines(ab)
+                if n > val:
+                    ev = {"lines": n, "limit": val}
+                    fid = f"{sid}|{rel}"
+                    out.append({
+                        "id": fid, "check": "CON", "kind": "constitution",
+                        "subject": rel, "severity": sev, "category": None,
+                        "fingerprint": fingerprint(fid, ev), "evidence": ev,
+                        "message_key": "constitution_violation",
+                        "constitution": {"rule_id": r["id"], "statement": r.get("statement", ""),
+                                         "enforcement_kind": ek},
+                    })
+    return out, None
+
+
 # ---- suppressions / 组装 -------------------------------------------------
 def split_suppressions(findings, suppressions):
     today = datetime.now(timezone.utc).date()
@@ -465,6 +524,14 @@ def main():
                 findings += c4
         else:
             skipped.append({"check": "C4", "reason": git_reason})
+
+        # C5 · 宪法检查（只查可执行的 deterministic rules）
+        const_path = cfg.get("constitution", {}).get("path", ".project-health/constitution.yml")
+        c5, c5_skip = check_c5(root, files, const_path)
+        if c5:
+            findings += c5
+        elif c5_skip:
+            skipped.append(c5_skip)
 
         src_scanned = sum(1 for rel, _ in files
                           if os.path.splitext(rel)[1].lower() in SOURCE_EXT and not GENERATED_RE.search(rel))

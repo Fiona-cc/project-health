@@ -20,6 +20,7 @@
 | broken_npm_script | 文档引用了不存在的 npm 脚本 `target` | 改成 package.json 里真有的脚本 |
 | oversized_doc | 文档过长（`lines` 行） | 拆分/压缩；旧记录归档为一句话 |
 | debt_hotspot | 又大又常改（`lines` 行 / 近改 `churn` 次） | 优先关注/拆分 |
+| constitution_violation | 违反宪法规则「`constitution.statement`」（上限 `limit` 行，实际 `lines` 行） | 按规则拆或 suppress |
 
 - 定位：纯文本 `subject:line`，行号取自 `evidence.locations`（多处就列多个）。
 - `suppressed_findings` → "看着吓人其实没事"一节；`expired_suppressions` → 提示"抑制已到期，重新计入"。
