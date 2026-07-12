@@ -1,6 +1,6 @@
 # Phase 3 · Fix 安全加固 — 实现 Spec
 
-> 状态：待审
+> 状态：implemented（markdown rules in place）
 > 日期：2026-07-12
 > 上位：`hardening-plan-v1.1.md` Phase 3
 > 定位：让 Fix **遵守 execution.trust**、**不用宽泛撤销**、**允许基线本来就有失败**。不改 Fix 的修复逻辑，只补安全闸门。

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""project-health · scan.py — 确定性扫描核心（C1–C4 → 结构化 findings）。
+"""project-health · scan.py — 确定性扫描核心（C1–C5 → 结构化 findings）。
 
 契约见 docs/schema-contract-v1.md。要求 Python>=3.8 + PyYAML。
 scanner 只产机器状态；人看的 markdown 报告由 skill 按状态生成。

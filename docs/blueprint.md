@@ -22,7 +22,7 @@
 
 **双重野心**：先**通用**（任何项目直接可用），再通过 setup 问答**长出贴合具体项目的定制规则**——支持直接用，也支持贴近自己业务优化。
 
-**边界（本次升级）**：project-health 有**两大面**（见下节）。目前建成的是 **A 面（养护已有）**；**B 面（从零建好）** 是下一大方向。无论哪面都**只出建议/配置，不亲自铺业务文件**——真正"铺文件"的脚手架仍作为可选的独立能力另立（见 §十一）。
+**边界（本次升级）**：project-health 有**两大面**（见下节）。目前 **A 面（养护已有）** 和 **B 面（从零建好）** 均已建成初版（design + frontend/DL domain packs + constitution v2）。无论哪面都**只出建议/配置，不亲自铺业务文件**——真正"铺文件"的脚手架仍作为可选的独立能力另立（见 §十一）。
 
 ---
 
@@ -93,23 +93,24 @@
 
 ## 四、套件结构与五个子 skill 职责
 
-成品是一个**套件**（和 superpowers 同构：多个各管一摊的子 skill）。**当前实现 = 四个独立子 skill 文件夹，各自带 `references/`，没有根 SKILL.md、也没有共享的根 references**；未来可选再加一个根路由 SKILL.md。
+成品是一个**套件**（和 superpowers 同构：多个各管一摊的子 skill）。**当前实现 = 五个独立子 skill 文件夹，各自带 `references/`（audit/watch 另含 `scripts/`），没有根 SKILL.md**；未来可选再加一个根路由 SKILL.md。
 
 ```
 project-health/                 ← 仓库（= 套件源）
-  audit/  SKILL.md + references/ ← 只读体检（code-rules / doc-rules / report-format）
-  fix/    SKILL.md + references/ ← 逐项修（fix-rules）
-  setup/  SKILL.md + references/ ← 背景→config（setup-rules）
-  watch/  SKILL.md + references/ ← 增量监控（watch-rules）
+  audit/  SKILL.md + references/ + scripts/scan.py
+  fix/    SKILL.md + references/
+  setup/  SKILL.md + references/
+  watch/  SKILL.md + references/ + scripts/compare.py
+  design/ SKILL.md + references/ + domains/
   docs/                         ← 蓝图 + 各 stage spec + research
+  tests/                        ← 金测（fixtures + golden.py）
   README.md
-  —— 无根 SKILL.md；各子 skill 自带 references（非共享）。
 ```
 
 **安装（推荐·也是实际做法）**：把各子目录装成**独立** skill 文件夹——
-`~/.claude/skills/project-health-audit / -fix / -setup / -watch`（仓库里仍保持短目录名）。
+`~/.claude/skills/project-health-audit / -fix / -setup / -watch / -design`。
 
-**未来可选（本次不做）**：加一个根 `SKILL.md` 作路由入口（"你想体检/修/配/监控?"→分派）+ 可选共享 references。**领域包 `domains/`** 属 **B 面**（未来），当前未建。
+**领域包 `domains/`** 已有 **frontend（精装）+ deep-learning（薄包）+ _template**，属 **B 面**。
 
 **生成物（落在被检项目里，工具中立、不绑 Claude）**：
 ```
@@ -301,7 +302,7 @@ audit 读不到 config 时，默认走"简明 + 只报关键项"的中间档。
 | **B 面 · design** | `design`：可缩放"设计顾问" skill（项目/模块）+ 前端·DL **领域包** + **宪法**（= `constitution.yml`） | ✅ Claude Skill 初版可用 |
 | 伴生（独立·可选） | `scaffold`：真去铺项目骨架——独立能力，不在核心 | ⬜ 可选 |
 
-**A 面已完整交付并真机验证（含四轮 GPT 审查 + 一轮真项目全链路）。B 面是下一大方向——本次只把它画进蓝图，不建。** 想大、做小：整张图画全，一块块建。
+**A 面已完整交付并真机验证（含四轮 GPT 审查 + 真项目全链路）。B 面（design + 领域包 + constitution v2）初版已建。** 想大、做小：整张图画全，一块块建。
 
 ---
 
@@ -342,6 +343,6 @@ audit 读不到 config 时，默认走"简明 + 只报关键项"的中间档。
 ## 附：待明确（留给各 Stage 的 spec）
 
 - config 文件的完整字段与格式 → setup spec（已定稿）
-- **领域包的标准模板结构 + 宪法格式 → B 面 spec**（未来）
+- **领域包的标准模板结构 + 宪法格式 → done**（design/references/domains/；constitution v2）
 - 文档守护用 hook 还是别的机制 → 未来（Stage 4 已把主动提醒留作 hook）
 - 各阈值默认值的具体取值 → Stage 1 audit spec（已定 400/800/500）

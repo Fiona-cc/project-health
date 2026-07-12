@@ -7,7 +7,7 @@ description: Use when the user wants to see what CHANGED in a project's health s
 
 ## Overview
 
-**Watch = audit with memory.** It sets a **baseline**, then on later runs reports **only what changed** since — 🆕 new / ✅ resolved / 🟰 remaining — so a long-lived project isn't re-scared with its whole issue list every time. Also flags docs that look **possibly out of date** vs recently-changed code. **It never touches your code or project docs**; the only things it writes are its own artifacts under `.project-health/` (a watch report; and — only when you explicitly say "接受现状 / 重置基线" — `baseline.md`).
+**Watch = audit with memory.** It sets a **baseline**, then on later runs reports **only what changed** since — 🆕 new / ✅ resolved / 🟰 remaining — so a long-lived project isn't re-scared with its whole issue list every time. Also flags docs that look **possibly out of date** vs recently-changed code. **It never touches your code or project docs**; the only things it writes are its own artifacts under `.project-health/` (a watch report; and — only when you explicitly say "接受现状 / 重置基线" — `state/baseline.yml`).
 
 ## When to use
 
@@ -25,7 +25,7 @@ description: Use when the user wants to see what CHANGED in a project's health s
 
 ## Process
 
-1. **Get or create a baseline** — `.project-health/state/baseline.yml` → else use the latest `.project-health/state/latest-run.yml` as reference → else this is the **first run**: run a `project-health-audit` first, show the result, and **ask whether to save the state as `baseline.yml`** — write it **only if the user confirms**; if they decline, just show this run and don't establish a baseline.
+1. **Get or create a baseline** — `.project-health/state/baseline.yml` → else use the latest `.project-health/state/latest-run.yml` as reference (**important: copy the old `latest-run.yml` to a temp snapshot before the fresh audit overwrites it**; otherwise you're comparing the new result against itself — always "no change"). Else this is the **first run**: run a `project-health-audit` first, show the result, and **ask whether to save the state as `baseline.yml`** — write it **only if the user confirms**; if they decline, just show this run and don't establish a baseline.
 2. **Fresh audit** — run `project-health-audit` now (this produces `.project-health/state/latest-run.yml` with the current structured findings).
 3. **Run the bundled comparator** — call `scripts/compare.py <baseline.yml> <latest-run.yml>`. The output is structured YAML (fire-and-forget — no hand-diffing). If Python/PyYAML are missing, explain which package is needed, then stop.
 4. **Doc-drift check** — via git, find code changed in the last N days (default 14) whose related docs weren't updated; flag them as **possibly out of sync — worth a look** (detection only, hedged — never claim the docs are definitely stale, and never edit them).
