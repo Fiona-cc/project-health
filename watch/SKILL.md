@@ -19,7 +19,7 @@ description: Use when the user wants to see what CHANGED in a project's health s
 ## Core principles
 
 1. **Report the delta, don't re-scare** — emphasize **new**; celebrate **resolved**; give **remaining** only as a count, not a re-listing.
-2. **Never touches your code/docs** — watch only reads your project; it writes only its own artifacts under `.project-health/` (the watch report always; `baseline.md` **only on explicit user confirmation**). Fixing is `project-health-fix`.
+2. **Never touches your code/docs** — watch only reads your project; it writes only its own artifacts under `.project-health/` (the watch report always; `state/baseline.yml` **only on explicit user confirmation**). Fixing is `project-health-fix`.
 3. **Respect suppressions** — a suppressed finding never counts as "new".
 4. **Baseline is updatable** — after clearing a batch, the user can set the current state as the new baseline ("accept current state").
 
@@ -45,4 +45,4 @@ Baseline priority, id-diff rules, doc-drift judgment, and the full report templa
 
 ## Note on the "doc guardian"
 
-Watch does the **detection** half (you ask → it checks whether recently-changed code has stale docs). The **proactive** half (auto-prompt after every edit) needs a Claude Code **hook** (PostToolUse/Stop), not a skill — deferred; the `doc_maintenance.prompt_after_ops` config field is the reserved slot.
+Watch does the **detection** half (you ask → it checks whether recently-changed code has stale docs). The **proactive** half (auto-prompt after every edit) needs a Claude Code **hook** (PostToolUse/Stop), not a skill — deferred (a future Claude Code hook); config `doc_links` serves the current watch doc-drift checks.

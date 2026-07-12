@@ -154,7 +154,8 @@ def load_config(root, config_path):
     cfg_path = config_path or os.path.join(root, ".project-health", "config.yml")
     if not os.path.isfile(cfg_path):
         th = dict(DEFAULTS["thresholds"])
-        return {"level": "standard", "context": "", "thresholds": th, "suppressions": []}, th
+        return {"level": "standard", "context": "", "thresholds": th,
+                "suppressions": [], "constitution": {}}, th
     try:
         loaded = yaml.safe_load(open(cfg_path, encoding="utf-8")) or {}
     except yaml.YAMLError as e:
@@ -194,7 +195,8 @@ def load_config(root, config_path):
                 datetime.strptime(str(exp), "%Y-%m-%d")
             except ValueError:
                 die(EXIT_CONFIG, f"suppression {s['id']} 的 expires 非法日期：{exp!r}（应 YYYY-MM-DD）。")
-    return {"level": level, "context": loaded.get("context") or "", "thresholds": th, "suppressions": supps}, th
+    return {"level": level, "context": loaded.get("context") or "", "thresholds": th,
+            "suppressions": supps, "constitution": loaded.get("constitution") or {}}, th
 
 
 # ---- C1 ------------------------------------------------------------------
@@ -409,7 +411,7 @@ def _glob_match(pattern, rel):
 
 
 def check_c5(root, files, constitution_path):
-    cpath = os.path.join(root, constitution_path.removeprefix("./"))
+    cpath = os.path.join(root, constitution_path[2:] if constitution_path.startswith("./") else constitution_path)
     if not os.path.isfile(cpath):
         return [], None   # 无宪法 → 不报错（不是每个项目都有）
     try:
@@ -419,6 +421,8 @@ def check_c5(root, files, constitution_path):
     rules = c.get("rules") or []
     out = []
     for r in rules:
+        if r.get("status", "active") != "active":
+            continue   # proposed / deprecated / 未确认 → 不执行
         ek = (r.get("enforcement") or {}).get("kind")
         if ek not in CON_DETERMINISTIC_KINDS:
             continue   # manual_review / 未知 → 不执行

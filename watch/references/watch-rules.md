@@ -8,7 +8,7 @@
 
 按顺序取第一个：
 1. **`.project-health/state/baseline.yml`** —— 显式基线（用户"接受现状"时存的），最稳。
-2. **`.project-health/state/latest-run.yml`** —— 没有显式基线就用最近一次扫描状态当参照。
+2. **`.project-health/state/latest-run.yml`** —— 没有显式基线就用最近一次扫描状态当参照。**关键**：在跑 fresh audit **之前**，先把旧的 `latest-run.yml` 复制到临时快照（否则 fresh audit 会覆盖它 → 你在拿新结果跟新结果比 → 永远是"无变化"）。
 3. **都没有 → 第一次运行**：先跑 `project-health-audit`（产出 `latest-run.yml`），**展示结果**，并**询问用户是否存成 `baseline.yml`**；**用户确认才写**，不确认就**只展示本次结果、不自动立基线**。
 
 **更新基线**：用户说"接受现状 / 重置基线" → 把当前 `latest-run.yml` 复制为新的 `baseline.yml`。
@@ -77,6 +77,6 @@
 
 ## 五、边界
 
-- **不碰你的代码/项目文档**；只写自己在 `.project-health/` 下的产物：watch 报告（每次）+ `baseline.md`（**仅用户确认"接受现状/重置基线"时**才写/覆盖）。
+- **不碰你的代码/项目文档**；只写自己在 `.project-health/` 下的产物：watch 报告（每次）+ `state/baseline.yml`（**仅用户确认"接受现状/重置基线"时**才写/覆盖）。
 - 非 git 仓：文档漂移检测跳过（并注明）。
 - watch **不替代** audit：首次全量体检仍走 `project-health-audit`；watch 专管"之后只看变化"。

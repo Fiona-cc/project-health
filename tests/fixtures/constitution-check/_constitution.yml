@@ -1,0 +1,16 @@
+schema_version: 2
+rules:
+  - id: max-300
+    scope: project
+    statement: "源文件不超过 300 行"
+    severity: error
+    enforcement: { kind: max_file_lines, value: 300 }
+    status: active
+    rationale: "控制文件大小"
+  - id: keep-clean
+    scope: project
+    statement: "模块边界清晰"
+    severity: warning
+    enforcement: { kind: manual_review }
+    status: active
+    rationale: "只能人工"

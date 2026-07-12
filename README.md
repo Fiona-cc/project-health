@@ -71,6 +71,7 @@ project-health/
 | C2 | 文档断链（路径 + npm 命令），保守提取、宁漏勿错 | — |
 | C3 | 超大文档 | ⚠️500 行 |
 | C4 | 危险热点（大文件 × 高频改动，读 git 历史） | — |
+| C5 | 宪法检查（读 `constitution.yml`，只查可执行规则） | — |
 
 **只读**，绝不改代码/文档。断链等位置型问题提供 `file:line`；文件/文档级问题提供路径和测量证据（如 `src/App.tsx — 986 非空行`）。健康分仅供感知、不是 KPI。
 可选 `.project-health/config.yml` 覆盖阈值、`level`（`beginner / standard / expert`）、`suppressions`（"看着吓人其实没事"的沉淀）。
@@ -84,12 +85,12 @@ project-health/
 ~/.claude/skills/project-health-audit/     ← 复制自本仓库 audit/（SKILL.md + references/ + scripts/！）
 ~/.claude/skills/project-health-fix/       ← 复制自本仓库 fix/（SKILL.md + references/）
 ~/.claude/skills/project-health-setup/     ← 复制自本仓库 setup/（SKILL.md + references/）
-~/.claude/skills/project-health-watch/     ← 复制自本仓库 watch/（SKILL.md + references/）
+~/.claude/skills/project-health-watch/     ← 复制自本仓库 watch/（SKILL.md + references/ + scripts/！）
 ~/.claude/skills/project-health-design/    ← 复制自本仓库 design/（SKILL.md + references/ + domains/）
 ```
 **⚠️ audit 必须带 `scripts/`**（`scan.py`），只复制 `SKILL.md + references/` 无法工作（audit 会报错说"缺脚本"、不会偷偷降级）。
 
-**依赖**：audit 需要 **Python ≥3.8 + PyYAML**。安装：`pip install pyyaml`。fix / setup / watch / design 是纯 markdown skill，无额外依赖。
+**依赖**：audit 和 watch 需要 **Python ≥3.8 + PyYAML**。安装：`pip install pyyaml`。fix / setup / design 是纯 markdown skill，无额外依赖。
 
 ## 当前限制
 

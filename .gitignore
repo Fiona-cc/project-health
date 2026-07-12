@@ -1,2 +1,4 @@
 # audit generated reports
 .project-health/
+__pycache__/
+*.py[cod]
