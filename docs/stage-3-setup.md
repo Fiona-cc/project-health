@@ -1,6 +1,6 @@
 # Stage 3 · setup — 实现 Spec
 
-> 状态：待审
+> 状态：implemented（field-validated on SmartMarketing_demo）
 > 日期：2026-07-10
 > 上位：`blueprint.md`（§一 边界、§四 职责、§七 setup 问答与 config）
 > 定位：**接入项目时**，先摸清背景（**猜后再问**），生成 `.project-health/config.yml`，让 audit/fix **贴合这个项目**。

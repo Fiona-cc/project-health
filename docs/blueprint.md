@@ -38,7 +38,7 @@
 | 干嘛 | 体检 → 找病 → 修 → 长期盯 | 动工前想清楚：模块边界、全局关切、内部治理 vs 对外接口 |
 | 性质 | 确定性、扫描、可测量 | 判断、设计、前瞻 |
 | 组成 | audit / fix / watch / setup | **设计顾问**（一个可缩放 skill）+ 领域包 + 宪法 |
-| 状态 | ✅ 已完成 | ⬜ 未来（本次只画蓝图，不建） |
+| 状态 | ✅ 已完成 | ✅ Claude Skill 初版可用（frontend + DL 领域包） |
 
 **四条核心认知：**
 
@@ -47,7 +47,7 @@
 2. **B 面是"分形"的**：同一套"工程脑子"，缩放到**项目**或**模块**都适用（大工程有大框架，每个模块也该有小框架）。故 B 面 = **一个可缩放的"设计顾问"skill**，对准哪个尺度就在哪个尺度帮你——不拆成两个。
 3. **宪法（Constitution）= 连接两面的桥**（借鉴 Spec-Kit）：一份**机器可读的短文件**，写项目**不可谈判的工程规矩**（文件别超 N 行 / 模块不跨层直连 / 配置归全局 / 业务模块边界清晰…）。
    - **B 面照它设计，A 面照它检查**（audit 查"违没违宪"——正是我们推迟的 `[专]/[领]` 结构检查）。
-   - 它就是 config 里预留的 `project_rules` 字段的**真身**。
+   - 它就是 **`.project-health/constitution.yml`**（独立文件；config 里 `project_rules` 已收敛到此，单一真源）。
 4. **知识用 hybrid 策略**：领域包写"**薄原则 + 指向权威深读**"（cookiecutter / 框架官方），**不抄整本书、也不硬绑别人的 skill**（用户不一定装了，断了就废；可"推荐搭配"但须能独立跑）。B 面真正深的价值是**通用工程原则**（跨领域），领域相关的只是薄骨架——所以"覆盖不全 / 只学皮毛"的担心，被"深处通用、浅处引用"化解。
 
 **命名（甲案，暂定）**：套件名 `project-health` 暂不动（已发布、A 面名副其实）。**将来 B 面落地时，再决定要不要把套件名从"健康"扩成"工程可维护性"**（健康只是其中 A 面）。现在纠结改名属过早优化。
@@ -91,7 +91,7 @@
 
 ---
 
-## 四、套件结构与四个子 skill 职责
+## 四、套件结构与五个子 skill 职责
 
 成品是一个**套件**（和 superpowers 同构：多个各管一摊的子 skill）。**当前实现 = 四个独立子 skill 文件夹，各自带 `references/`，没有根 SKILL.md、也没有共享的根 references**；未来可选再加一个根路由 SKILL.md。
 
@@ -116,7 +116,7 @@ project-health/                 ← 仓库（= 套件源）
 <被检项目>/
   .project-health/
     config.yml                  ← setup 生成：背景/阈值/verify/context/suppressions（完整 schema 见 §七）
-    baseline.md                 ← 基线快照（watch 首跑、用户确认后写）
+    state/baseline.yml          ← 基线快照（watch 首跑、用户确认后写）
     reports/audit-YYYY-MM-DD.md ← 每次体检报告
     reports/watch-YYYY-MM-DD.md ← 每次监控报告
   .project-healthignore         ← 显式忽略清单（§八），根目录，仿 .gitignore
@@ -127,9 +127,10 @@ project-health/                 ← 仓库（= 套件源）
 | audit | "检查项目健康""项目状态怎么样" | 只读扫描 → 出化验单（含健康分） | 只读 |
 | fix | "修第 3 项""压缩一下旧版本记录" | 按报告编号逐项修，每项独立 commit，修完重跑 audit | 读写 |
 | setup | "接入项目健康监控""给项目做工程配置" | 猜+问背景 → 写 config；给结构建议但不铺文件 | 读写 |
-| watch | "看看最近一个月新增了哪些问题" | 对比基线 → 标记 新增/已解决/遗留 + 文档漂移检测 | 不碰你的代码/文档；写自己的 watch 报告；`baseline.md` 仅用户确认才写 |
+| watch | "看看最近一个月新增了哪些问题" | 对比基线 → 标记 新增/已解决/遗留 + 文档漂移检测 | 不碰你的代码/文档；写自己的 watch 报告；`baseline.yml` 仅用户确认才写 |
+| design | "帮我设计这个模块的工程结构" / "生成工程宪法" | 设计顾问：项目/模块 尺度 + 7 条通用原则 + 领域包 + 宪法 | 只出建议 + 确认后才写 `constitution.yml`；不铺文件 |
 
-**领域包**是横切在四个子 skill 之上的一条线：setup 认领域、audit 用领域骨架判断、fix 按领域骨架修。
+**领域包**是横切在五个子 skill 之上的一条线：setup 认领域、design 用领域包引导设计、audit 用领域骨架判断、fix 按领域骨架修。
 
 ---
 
@@ -157,6 +158,7 @@ project-health/                 ← 仓库（= 套件源）
 | audit | ≈ 诊断 | 只读体检，出化验单 |
 | fix | ≈ 写代码/TDD | 按单施工，逐项修 |
 | watch | ≈ 回归检查 | 长期盯着，防复发、发现新增 |
+| design | ≈ 结构设计 | 动工前想清楚架构、模块边界、工程规矩（B 面） |
 | 文档守护 | ≈ hook 行为 | 贯穿开发期的横切，见 §十 |
 
 ---
@@ -220,10 +222,11 @@ thresholds:
 verify: "npm run build"    # fix 改代码后的兜底命令（v1 单条）
 doc_maintenance:
   prompt_after_ops: false  # 操作后主动提醒维护文档（留给 hook，未来）
-project_rules: []          # 项目专属硬规则（[专] 层）= 未来"宪法"的落地字段
+constitution:
+  path: ".project-health/constitution.yml"  # 工程规矩 — 单一真源（project_rules 已收敛到此）
 suppressions: []           # "看着吓人其实没事"的沉淀（id + reason + expires）
 ```
-**谁读/谁写**：**setup** 生成并维护；**audit** 读 `thresholds`/`level`/`context`/`suppressions`；**fix** 读 `verify`、可追加 `suppressions`；**watch** 读 `doc_maintenance`（`context` 可选）。
+**谁读/谁写**：**setup** 生成并维护；**audit** 读 `thresholds`/`level`/`context`/`suppressions`；**fix** 读 `verify`、可追加 `suppressions`；**watch** 读 `doc_links`（文档漂移降噪）；**design** 读 `domain`/`context`（加载领域包）。
 > 忽略清单不放这里，单独用根目录 `.project-healthignore`（仿 .gitignore，见 §八）。
 
 ---
@@ -249,7 +252,7 @@ Project Health: 82 / 100
 
 **三个长期养护机制**：
 1. **suppressions（沉淀"看着吓人其实没事"）**：已评估、暂不动的项写进 config 的 `suppressions`（带 `reason` + `expires`）。audit 据此**默认不再重复报**、到期后自动再提醒——不用每次重新解释。
-2. **baseline（首跑不吓人）**：存量项目第一次 audit 可生成基线快照 `.project-health/baseline.md`。之后 watch **只重点报**：新增问题 / 已解决 / 基线遗留——让它像长期养护工具，而不是一次性吓人的审计器。
+2. **baseline（首跑不吓人）**：存量项目第一次 audit 可生成基线快照 `.project-health/state/baseline.yml`。之后 watch **只重点报**：新增问题 / 已解决 / 遗留——让它像长期养护工具，而不是一次性吓人的审计器。
 3. **`.project-healthignore`（显式扫描范围）**：根目录一个仿 .gitignore 的忽略文件，用户可扩展；领域包贡献默认忽略（DL 的 `runs/ weights/ data/…`）。
 
 ---

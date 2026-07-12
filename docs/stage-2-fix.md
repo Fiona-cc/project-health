@@ -1,6 +1,6 @@
 # Stage 2 · fix — 实现 Spec
 
-> 状态：待审
+> 状态：implemented（field-validated on SmartMarketing_demo）
 > 日期：2026-07-10
 > 上位：`blueprint.md`（§四 子 skill 职责、§十 文档演进）
 > 定位：拿着 audit 的报告，**在你点名某项之后**，把那一项**修掉**；一项一个 commit，修完重跑 audit 确认。

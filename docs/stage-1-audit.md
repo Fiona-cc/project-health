@@ -1,6 +1,6 @@
 # Stage 1 · audit（精简版 v1）— 实现 Spec
 
-> 状态：待审
+> 状态：implemented（field-validated on SmartMarketing_demo）
 > 日期：2026-07-10
 > 上位：`blueprint.md`（§六 检查维度、§八 报告规范）
 > 定位：project-health 套件的第一块、可独立发布的最小可用体检器。**精简版先落地**，能真跑、能出报告、能挂到新项目和 GiftBook 上用。

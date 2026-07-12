@@ -1,6 +1,6 @@
 # Stage 4 · watch — 实现 Spec
 
-> 状态：待审
+> 状态：implemented（field-validated on SmartMarketing_demo）
 > 日期：2026-07-10
 > 上位：`blueprint.md`（§四 职责、§八 baseline、§十 文档演进）
 > 定位：长期养护——**立基线，之后只报"增量"**（新增 / 已解决 / 遗留），别每次都把全量问题再吓你一遍。
