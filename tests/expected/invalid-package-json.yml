@@ -11,14 +11,6 @@ effective_config:
 scan:
   files_scanned: 0
   docs_scanned: 1
-  git: false
-  custom_ignore: false
-  custom_ignore_rules: 0
-  skipped_checks:
-  - check: C2-command
-    reason: invalid_package_json
-  - check: C4
-    reason: not_repo_root
 summary:
   error: 0
   warning: 0

@@ -26,8 +26,9 @@ except ImportError:
     sys.exit(3)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.dirname(HERE)
-SCAN = os.path.join(REPO, "audit", "scripts", "scan.py")
+# SCAN 相对 golden.py 自身：测试目录上一级 + audit/scripts/scan.py
+# （无论从工作树还是干净 checkout 临时目录跑，都能找到同树的 scan.py）
+SCAN = os.path.join(os.path.dirname(HERE), "audit", "scripts", "scan.py")
 FIXTURES = os.path.join(HERE, "fixtures")
 EXPECTED = os.path.join(HERE, "expected")
 
@@ -45,7 +46,11 @@ def scan_state(root):
     if r.returncode != 0:
         return None, f"scan 退出码 {r.returncode}: {r.stderr.strip()}"
     d = yaml.safe_load(r.stdout)
-    d.pop("run", None)  # run 元数据易变，不比
+    d.pop("run", None)  # run 元数据(时间戳/commit)易变，不比
+    # git/run-id / ignore 取决于 fixture 放在哪（是否在别的 git 仓里 / 是否有 .project-healthignore 在旁边），跨环境合理不同；不比
+    s = d.get("scan") or {}
+    for fk in ("git", "skipped_checks", "custom_ignore", "custom_ignore_rules"):
+        s.pop(fk, None)
     return d, None
 
 
@@ -97,6 +102,9 @@ def check_fixture(name):
     if err:
         return (False, err)
     expected = yaml.safe_load(open(exp_path, encoding="utf-8"))
+    es = expected.get("scan") or {}
+    for fk in ("git", "skipped_checks", "custom_ignore", "custom_ignore_rules"):
+        es.pop(fk, None)
     return (got == expected, "输出与期望不符")
 
 

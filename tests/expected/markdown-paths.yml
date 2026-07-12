@@ -11,12 +11,6 @@ effective_config:
 scan:
   files_scanned: 1
   docs_scanned: 1
-  git: false
-  custom_ignore: false
-  custom_ignore_rules: 0
-  skipped_checks:
-  - check: C4
-    reason: not_repo_root
 summary:
   error: 2
   warning: 0

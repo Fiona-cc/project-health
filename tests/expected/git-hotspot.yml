@@ -11,10 +11,6 @@ effective_config:
 scan:
   files_scanned: 2
   docs_scanned: 0
-  git: true
-  custom_ignore: false
-  custom_ignore_rules: 0
-  skipped_checks: []
 summary:
   error: 0
   warning: 2
@@ -46,11 +42,11 @@ findings:
   subject: src/hot.js
   severity: info
   category: null
-  fingerprint: sha256:4f9b52c258d04d34
+  fingerprint: sha256:168c452ae76151aa
   evidence:
     lines: 503
-    churn: 4
-    score: 2012
+    churn: 3
+    score: 1509
   message_key: debt_hotspot
 suppressed_findings: []
 expired_suppressions: []
