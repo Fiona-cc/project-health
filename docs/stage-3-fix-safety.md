@@ -31,22 +31,20 @@ execution:
 
 **Fix 的安全行为由它决定**：
 
-### `disabled`
-- **不执行任何** verify 命令 + 测试命令。
-- 修改后明确说："我没跑验证；安全闸门关着，建议你手动确认项目还能正常 build/跑通。"
-- 不再自动探测 build/test 命令。
+### 最高闸门：`disabled`（无条件禁止，白名单不能绕过）
+`execution.trust: disabled` → **不执行任何** 项目 build/test/verify 命令。只读检查（re-audit、读文件）仍然允许。改后明确说"安全闸门关着，未执行自动验证"。不再自动探测 build/test 命令。
+
+### 当 trust != disabled 时，优先级
+`approved_verify` 白名单 > `config.verify`（trusted 时可直接跑）> 自动探测命令（均需确认）。
 
 ### `prompt`（默认）
-- 首次想跑某个 verify 命令前：**先展示具体命令 + 说明会执行项目代码 → 等用户确认 → 确认后才跑**。
-- 用户批准后，可把它记进 `approved_verify`（可选，让下次不用再问）。
-- **把"检测到项目有 npm build"和"用户批准跑 npm build"分开**——这两个不是一回事。
+首次想跑某个 verify 命令前：**先展示具体命令 + 说明会执行项目代码 → 等用户确认 → 确认后才跑**。
+- 用户说"这次可以运行"→ 只执行本次，不记白名单。
+- 用户说"以后可以直接运行/记住"→ 才写入 `approved_verify`。
+Agent **不自行往白名单加东西**。自动探测出的命令**不算"已批准"**——必须单独确认。
 
 ### `trusted`
-- 可直接执行 `config.verify`；**自动探测出的其余命令**仍需确认或与 `approved_verify` 对照。
-
-### `approved_verify`
-- 白名单。里面的命令可以直接跑。
-- Agent **不自己往白名单里加东西**——只有用户说了才算。
+可直接执行 `config.verify` 和已在 `approved_verify` 白名单里的命令。自动探测出的新命令**仍需确认或与白名单对照**。
 
 ---
 

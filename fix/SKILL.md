@@ -21,10 +21,10 @@ Repairs the issues found by `project-health-audit`. **This skill writes code/doc
 2. **One commit per item** — each fix is independently revertible.
 3. **Clean base** — ensure the working tree is clean (or commit/stash existing changes) before fixing; never mix a fix with unrelated changes.
 4. **Honor `execution.trust` （安全闸门）** — read `.project-health/config.yml`'s `execution.trust` and `approved_verify` before running ANY project command.
-   - `disabled`：**禁止执行** 项目 build/test/verify 等命令；只读检查（re-audit、读文件）**仍然允许**。改后明确说"未执行自动验证"。
-   - `prompt`（缺省）：首次想跑 verify/test 命令前，**先展示具体命令 + 说明会执行项目代码 → 等用户确认**；确认后可记入 `approved_verify`（下次免问）。自动探测≠用户批准。
-   - `trusted`：可直接跑 `config.verify` 和已在 `approved_verify` 白名单的命令；自动探测出的新命令**仍需确认**。
-   - 优先级（高→低）：`approved_verify` > `trust` > 自动探测。Agent **不自行往白名单加东西**。
+   - **`disabled` 是最高闸门，白名单不能绕过。** `disabled` 时无条件禁止项目 build/test/verify 命令。只读检查（re-audit、读文件）仍然允许。
+   - 当 trust != disabled 时，优先级：`approved_verify` 白名单 > `config.verify`（trusted 可直接跑）> 自动探测（均需确认）。
+   - `prompt`（缺省）：首次想跑 verify/test，**先展示命令 → 等用户确认**。用户说"这次可以运行"→ 只执行本次、不记白名单。用户说"以后可以直接运行/记住"→ 才写入 `approved_verify`。Agent **不自行往白名单加东西**。自动探测≠用户批准。
+   - `trusted`：可直接跑 `config.verify` 和 `approved_verify` 白名单命令；自动探测出的新命令仍需确认。
 5. **Verify after — 改完必须确认没坏** — for any **code-touching** fix and when trust allows: run the verify command (baseline → fix → verify again). **If it passed at baseline but fails after → the fix broke something → revert this fix immediately** (revert precisely per rule 6). Doc-only fixes skip build-verify. If trust forbids or no verify command exists, **say so honestly** — do not claim verification.
 6. **Precise rollback（精确回滚）** — before fixing, record the **touched files** list (including new files the fix will create). If rollback is needed: **revert only those files** — do not `git restore .`, `git checkout -- .`, `git clean -fd`, or `git reset --hard`. New files created by the fix → delete only those. Do NOT affect pre-existing untracked files. If you cannot determine the exact rollback scope, **stop and report**; do not execute a wide clean.
 7. **Stay in scope** — only touch files **directly related** to the item.

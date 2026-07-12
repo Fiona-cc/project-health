@@ -50,7 +50,7 @@
    - 它就是 **`.project-health/constitution.yml`**（独立文件；config 里 `project_rules` 已收敛到此，单一真源）。
 4. **知识用 hybrid 策略**：领域包写"**薄原则 + 指向权威深读**"（cookiecutter / 框架官方），**不抄整本书、也不硬绑别人的 skill**（用户不一定装了，断了就废；可"推荐搭配"但须能独立跑）。B 面真正深的价值是**通用工程原则**（跨领域），领域相关的只是薄骨架——所以"覆盖不全 / 只学皮毛"的担心，被"深处通用、浅处引用"化解。
 
-**命名（甲案，暂定）**：套件名 `project-health` 暂不动（已发布、A 面名副其实）。**将来 B 面落地时，再决定要不要把套件名从"健康"扩成"工程可维护性"**（健康只是其中 A 面）。现在纠结改名属过早优化。
+**命名（甲案，暂定）**：套件名 `project-health` 暂不动（已发布、A 面名副其实）。**B 面进入真实项目试用后，再判断是否需要扩展套件命名**（健康只是其中 A 面）。现在纠结改名属过早优化。
 
 ---
 
@@ -137,18 +137,17 @@ project-health/                 ← 仓库（= 套件源）
 
 ## 五、流程线：生命周期
 
-四个子 skill 不是散的，它们组成一条养护生命周期（和 superpowers「brainstorm→写→测」同理）。分两种入口：
+五个子 skill 不是散的，它们组成一条养护生命周期（和 superpowers「brainstorm→写→测」同理）。分两种入口：
 
 ```
 🟢 新项目（空的）：
-   setup                →  （开发中）           →  audit     →  fix   →  watch
-   摸清背景+生成config      文档守护在旁边            定期体检       修        持续盯
-   +给"理想结构建议"        该记文档时主动提醒(§十)
-   （不亲自铺文件）
+   setup → design   →   开发   →  audit  →  fix  →  watch
+   摸清    设计结构         文档守护      定期体检     修       持续盯
+   背景    生成宪法         在旁边
 
 🟡 存量项目（如 GiftBook）：
-   setup                →  audit（首跑立基线）  →  fix   →  watch
-   摸清背景+确认            体检"看病"+存 baseline    修        对比基线只报增量
+   setup → audit（首跑立基线） → fix → watch
+   摸清    体检"看病"            修     对比基线只报增量
 ```
 
 > 脚手架（真去铺文件）是**独立能力**，不在这条线内——见 §十一。
@@ -209,24 +208,7 @@ project-health/                 ← 仓库（= 套件源）
 - 据背景提议：水平（小白 / 专家）、目标（MVP / 长线）
 - 特殊偏好 / 阈值调整 / 要 suppress 的项
 
-**产物 `.project-health/config.yml`**（工具中立；完整 schema 以 setup 的 spec 为准）：
-```yaml
-domain: [frontend]         # 检测+确认，可多个
-stack: [react, vite]       # 检测到的技术栈（信息用）
-level: expert              # beginner | expert
-goal: long-term            # mvp | long-term
-context: ""                # 一句话背景（干嘛的/角色/最担心什么）——报告据此来讲
-thresholds:
-  file_warn: 400
-  file_error: 800
-  doc_warn: 500
-verify: "npm run build"    # fix 改代码后的兜底命令（v1 单条）
-doc_maintenance:
-  prompt_after_ops: false  # 操作后主动提醒维护文档（留给 hook，未来）
-constitution:
-  path: ".project-health/constitution.yml"  # 工程规矩 — 单一真源（project_rules 已收敛到此）
-suppressions: []           # "看着吓人其实没事"的沉淀（id + reason + expires）
-```
+**产物 `.project-health/config.yml`**。**正式 schema 以 `docs/schema-contract-v1.md` 为唯一契约**（含 `schema_version`/`level`/`thresholds`/`verify`/`execution.trust`/`doc_links`/`constitution.path` 等全部字段）。Blueprint 不维护独立复本。
 **谁读/谁写**：**setup** 生成并维护；**audit** 读 `thresholds`/`level`/`context`/`suppressions`；**fix** 读 `verify`、可追加 `suppressions`；**watch** 读 `doc_links`（文档漂移降噪）；**design** 读 `domain`/`context`（加载领域包）。
 > 忽略清单不放这里，单独用根目录 `.project-healthignore`（仿 .gitignore，见 §八）。
 
