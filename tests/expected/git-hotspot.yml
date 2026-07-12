@@ -42,11 +42,11 @@ findings:
   subject: src/hot.js
   severity: info
   category: null
-  fingerprint: sha256:168c452ae76151aa
+  fingerprint: sha256:4f9b52c258d04d34
   evidence:
     lines: 503
-    churn: 3
-    score: 1509
+    churn: 4
+    score: 2012
   message_key: debt_hotspot
 suppressed_findings: []
 expired_suppressions: []

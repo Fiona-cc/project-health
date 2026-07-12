@@ -91,6 +91,15 @@ project-health/
 
 **依赖**：audit 需要 **Python ≥3.8 + PyYAML**。安装：`pip install pyyaml`。fix / setup / watch / design 是纯 markdown skill，无额外依赖。
 
+## 当前限制
+
+- **设计顾问（design）** 只提供通用原则 + 前端/深度学习领域包；其他领域回退通用原则。
+- **宪法自动检查（C5）** 当前仅支持 `max_file_lines`；其余 deterministic kind（`forbidden_dependency` 等）已定义 schema，检查逻辑待实现。
+- **Watch** 的文档守护 hook（操作后自动提醒）尚未实现，需 Claude Code hook 配合。
+- **跨 agent 验收**：目前仅在 Claude Code 上验证；Codex/Cursor 等平台未正式测试。
+- **Golden 测试** 已在本地通过（12 fixtures），跨平台 CI 待配置。
+- 项目仍为个人工具定位，未做多用户/团队权限设计。
+
 **若想保留套件结构**把整个仓库放到 `~/.claude/skills/project-health/`。
 
 装好后，新开一个会话，用大白话触发：

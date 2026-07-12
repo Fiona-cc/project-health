@@ -1,0 +1,45 @@
+schema_version: 1
+effective_config:
+  level: standard
+  context: ''
+  thresholds:
+    file_warn: 400
+    file_error: 800
+    doc_warn: 500
+    churn_days: 180
+    churn_min: 3
+scan:
+  files_scanned: 2
+  docs_scanned: 0
+summary:
+  error: 1
+  warning: 1
+  info: 0
+findings:
+- id: C1|large-file|src/big.js
+  check: C1
+  kind: large-file
+  subject: src/big.js
+  severity: warning
+  category: production
+  fingerprint: sha256:c7c5149cacfe04ab
+  evidence:
+    lines: 500
+  message_key: oversized_source_file
+- id: CON|max-300|src/big.js
+  check: CON
+  kind: constitution
+  subject: src/big.js
+  severity: error
+  category: null
+  fingerprint: sha256:305aee03c6d56de8
+  evidence:
+    lines: 500
+    limit: 300
+  message_key: constitution_violation
+  constitution:
+    rule_id: max-300
+    statement: 源文件不超过 300 行
+    enforcement_kind: max_file_lines
+suppressed_findings: []
+expired_suppressions: []

@@ -1,0 +1,5 @@
+schema_version: 1
+level: standard
+thresholds: { file_warn: 400, file_error: 800, doc_warn: 500, churn_days: 180, churn_min: 3 }
+constitution: { path: ".project-health/constitution.yml" }
+suppressions: []
