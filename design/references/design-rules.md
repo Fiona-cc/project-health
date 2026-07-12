@@ -61,28 +61,40 @@
 
 ---
 
-## 宪法（Constitution）—— 跨 A/B 的桥
+## 宪法（Constitution v2）—— 跨 A/B 的桥
 
 - 位置：`.project-health/constitution.yml`，YAML，用户确认后写。
-- Schema：
+- Schema（v2）：
 ```yaml
-schema_version: 1
+schema_version: 2
 rules:
   - id: fe-page-no-business-logic
     scope: module
     applies_to: "src/pages/**"
-    rule: "页面组件不写业务逻辑，抽到 services / hooks"
-    level: hard              # hard(🔴) | advisory(⚠️)
-    reason: "页面一旦掺业务逻辑，复用和测试都受阻"
+    module: "notification"
+    statement: "页面组件不写业务逻辑，抽到 services / hooks"
+    severity: error            # error(🔴) | warning(⚠️) | info(ℹ️) —— 多重要
+    enforcement:
+      kind: manual_review      # 能不能自动查？manual_review = 不能
+    status: active             # active | proposed
+    rationale: "页面一旦掺业务逻辑，复用和测试都受阻"
+
   - id: max-file-lines
     scope: project
-    rule: "单个源文件不超过 400 行"
-    level: advisory
-    reason: "过大文件改动风险高"
+    statement: "单个源文件不超过 400 行"
+    severity: warning
+    enforcement:
+      kind: max_file_lines
+      value: 400
+    status: active
+    rationale: "过大文件改动风险高"
 ```
-- **`level`**：`hard` → 未来 A 面 audit 报 🔴；`advisory` → ⚠️。
-- **只收**：经用户确认、长期稳定、**具体可判断**的规则。**不收抽象口号**(那 7 条是内部镜头，不写进宪法)。
-- **和 `config.yml` 的关系**：宪法是"规矩"，config 是"设定"；不重叠。config 里的 `project_rules` 字段收敛到宪法（单一真源）。
+- **`severity`** 和 **`enforcement`** 拆开：
+  - `severity` = 规则对项目多重要（决定 🔴/⚠️/ℹ️）。
+  - `enforcement.kind` = 能不能脚本自动查。可自动查的（`max_file_lines`/`forbidden_dependency`/`required_path`/`required_file_pair`/`naming_pattern`/`forbidden_path`）→ 未来 audit 自动执行；`manual_review` → 只在设计/人工审查时提示；未知 kind → 不执行并说明。
+- `applies_to`（可选）：文件/路径 glob，窄化规则的生效范围；`module`（可选）：限定到哪个 feature/模块。
+- **只收**具体可判断的规则，不收抽象口号。
+- **写入**：先读已有文件 → 展示 proposed diff → 按 `id` merge → 不静默覆盖/删除。
 
 ---
 

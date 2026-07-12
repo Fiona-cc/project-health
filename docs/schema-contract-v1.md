@@ -90,6 +90,27 @@ expired_suppressions: [ … ]   # 过期/失效的 suppression（其对应 findi
 
 ---
 
+## 五·五、宪法（constitution.yml）— v2（Phase 5 定稿）
+
+```yaml
+schema_version: 2
+rules:
+  - id: fe-page-no-business-logic
+    scope: module
+    applies_to: "src/pages/**"
+    statement: "页面组件不写业务逻辑"
+    severity: error                     # 多重要（🔴/⚠️/ℹ️）
+    enforcement:                        # 能不能自动查
+      kind: manual_review
+    status: active                      # active | proposed
+    rationale: "页面一旦掺业务逻辑，复用和测试都受阻"
+```
+- `severity` 和 `enforcement` 拆开。`enforcement.kind` ∈ `max_file_lines / forbidden_dependency / required_path / required_file_pair / naming_pattern / forbidden_path / manual_review`。
+- `applies_to`（可选）：file/path glob；`module`（可选）：限定到的 feature。
+- **谁写/谁读**：**design** 生成并维护；**audit（Phase 6）** 读可执行规则并检查；`manual_review` 只在设计/CR 中提示。
+
+---
+
 ## 五、watch 怎么对比（按 `id`）
 
 - id 集合 `NOW` vs `BASE`：`new = NOW∖BASE`；`resolved = BASE∖NOW`；`remaining = 交集`。

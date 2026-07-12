@@ -69,10 +69,21 @@ Identify scope → walk the checklist → give concrete advice grounded in the r
 ## Constitution (the bridge between B-face design and A-face audit)
 
 - File: `.project-health/constitution.yml` — YAML, machine-readable, written **only after you confirm**.
-- Each rule: `{id, scope(project|module), rule, level(hard|advisory), reason}`.
-- **hard** → future audit would flag as 🔴; **advisory** → ⚠️.
-- Only contains **confirmed, stable, concrete, judgeable** rules — NO abstract slogans ("keep single responsibility" stays in the checklist; the constitution gets "page components must not contain business logic; extract to services/hooks").
-- The 7 principles are the **internal lens**; the constitution records **what those principles mean for this specific project**.
+- Each rule fields: `{id, scope(project|module), statement, severity(error|warning|info), enforcement{kind, ...}, status(active|proposed), rationale}`.
+- **`severity`** = how important (🔴/⚠️/ℹ️); **`enforcement.kind`** = can a machine check it?
+  - Deterministic kinds: `max_file_lines`, `forbidden_dependency`, `required_path`, `required_file_pair`, `naming_pattern`, `forbidden_path` — future audit can auto-check.
+  - `manual_review` — audit only flags in design/CR, never auto-reports.
+  - Unknown kind → don't execute; note it's not yet supported.
+- `applies_to` (optional): file/path globs narrowing what the rule covers; `module` (optional): which feature/module.
+- Only **confirmed, stable, concrete** rules — NO abstract slogans.
+| enforcement.kind | 示例 rule | 能否自动查 |
+|---|---|---|
+| max_file_lines | "文件不超过 400 行" | ✅ 能 |
+| forbidden_dependency | "页面不得直接 import 数据访问层" | ✅ 能 |
+| required_path | "每个模块必须有一个 README.md" | ✅ 能 |
+| naming_pattern | "Vue 组件文件必须 PascalCase" | ✅ 能 |
+| manual_review | "模块边界清晰" | ❌ 只能人工 |
+- **写入规则**：先读已有文件 → 展示 proposed diff → 用户确认 → 按 `id` merge。不静默覆盖/删除其他规则。
 
 ## Domain packs
 
