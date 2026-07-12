@@ -56,26 +56,41 @@
 ## 四、config 完整 schema（本处定稿；setup 是初始生成者 / 主维护者）
 
 ```yaml
-# .project-health/config.yml —— 由 project-health-setup 生成与维护
-domain: [frontend]          # 检测+确认，可多个
-stack: [react, vite]        # 检测到的技术栈（信息用）
-level: expert               # beginner | expert
-goal: long-term             # mvp | long-term
-context: ""                 # 一句话背景：项目是干嘛的 / 你的角色 / 最担心什么
-                            # audit/watch 报告据此围绕你在意的点来讲
-thresholds:
+# .project-health/config.yml —— 正式 schema 以 docs/schema-contract-v1.md 为唯一契约；
+# 本处为示例。由 project-health-setup 生成与维护。
+
+schema_version: 1
+
+domain: [frontend]
+stack: [react, vite]
+level: standard              # beginner | standard | expert
+goal: long-term              # mvp | long-term
+context: ""                  # 一句话背景（干嘛的 / 角色 / 最担心什么）
+
+thresholds:                  # audit 读取；setup 按 goal 提议、用户可调
   file_warn: 400
   file_error: 800
   doc_warn: 500
-verify: "npm run build"     # fix 改代码后的兜底命令；v1 只支持「单条命令」
-                            # （后续可扩展为 verify.commands 列表，本版先不改 schema）
-doc_maintenance:
-  prompt_after_ops: false   # Stage 4 用
-project_rules: []           # 项目专属硬规则（预留）
-suppressions: []            # id + reason + expires
+  churn_days: 180
+  churn_min: 3
+
+verify: "npm run build"      # fix 改代码后的兜底命令；v1 单条
+
+execution:                   # fix 安全闸门
+  trust: prompt              # prompt | trusted | disabled
+  approved_verify: []
+
+doc_links: []                # 代码→文档 显式映射（watch 降噪，Phase 4）
+
+constitution:                # 工程规矩 — 单一真源
+  path: ".project-health/constitution.yml"
+
+suppressions: []             # id = finding 的 stable id，由 audit 生成
 ```
 
-- **谁写/谁读**：**setup 生成并维护**；**audit 只读**（`thresholds`/`level`/`context`/`suppressions`）；**fix 可追加 `suppressions`**；**watch（将来）读 `doc_maintenance`**。
+- **谁写/谁读**：**setup 生成并维护**；**audit 只读**（`thresholds`/`level`/`context`/`suppressions`）；**fix 可追加 `suppressions`**（也读 `verify`）；**watch 读 `doc_maintenance`**；**design 读 `domain` + `context`** 加载对应领域包。
+- **`constitution.path`** 是工程规矩的单一真源（config 里不再保留 `project_rules`）。
+- **缺字段回落默认**：保证 audit/fix 不依赖 setup 也能跑。正式 schema 以 `docs/schema-contract-v1.md` 为准，本文件不维护独立 schema 复本。
 - **缺字段回落默认**：保证 audit/fix 不依赖 setup 也能跑。
 - 只写 setup 认得的字段；不确定的字段留默认，别乱填。
 

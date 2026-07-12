@@ -35,21 +35,37 @@ One-time onboarding for a project. **Detects the project's background (猜后再
 
 ## Config schema (setup is the initial generator / main maintainer)
 
-**Who writes/reads it:** setup **generates & maintains** it · audit **reads only** (`thresholds`/`level`/`context`/`suppressions`) · fix **may append** `suppressions` · watch (future) reads `doc_maintenance`.
+**Who writes/reads it:** setup **generates & maintains** it · audit **reads only** (`thresholds`/`level`/`context`/`suppressions`) · fix **may append** `suppressions` (also reads `verify`) · watch reads `doc_maintenance` · design reads `domain` + `context` to load matching domain packs. **`constitution.path`** is the single source of truth for project rules (no separate `project_rules`). The authoritative schema is `docs/schema-contract-v1.md`.**
 
 ```yaml
-domain: [frontend]          # detected + confirmed; may be multiple
-stack: [react, vite]        # detected tech stack (informational)
-level: expert               # beginner | expert — report tone/detail
-goal: long-term             # mvp | long-term — threshold strictness
-context: ""                 # one-line background: what it's for / your role / biggest worry
-                            # audit & watch frame their report around this
-thresholds: { file_warn: 400, file_error: 800, doc_warn: 500 }
-verify: "npm run build"     # fix's post-edit safety command; v1 = ONE command
-                            # (future: may extend to a verify.commands list)
-doc_maintenance: { prompt_after_ops: false }   # Stage 4 uses this
-project_rules: []           # project-specific hard rules (reserved)
-suppressions: []            # "看着吓人其实没事" seeds (id + reason + expires)
+# 正式 schema 以 docs/schema-contract-v1.md 为准；本处为示例。
+schema_version: 1
+
+domain: [frontend]
+stack: [react, vite]
+level: standard            # beginner | standard | expert
+goal: long-term            # mvp | long-term — threshold strictness
+context: ""                # one-line background (purpose / your role / biggest worry)
+
+thresholds:                # audit 读取；setup 按 goal 提议、用户可调
+  file_warn: 400
+  file_error: 800
+  doc_warn: 500
+  churn_days: 180
+  churn_min: 3
+
+verify: "npm run build"    # fix 改代码后的兜底命令；v1 单条
+
+execution:                 # fix 安全闸门
+  trust: prompt            # prompt | trusted | disabled
+  approved_verify: []
+
+doc_links: []              # 代码→文档 显式映射（watch 降噪，Phase 4）
+
+constitution:              # 工程规矩→唯一真源
+  path: ".project-health/constitution.yml"
+
+suppressions: []           # id = finding 的 stable id，由 audit 生成
 ```
 
 Field details, detection rules, and per-domain structure advice: [references/setup-rules.md](references/setup-rules.md).
