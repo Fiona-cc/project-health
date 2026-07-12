@@ -8,39 +8,64 @@
 
 **改前（基线）**：
 - `git status` 确认工作区干净。不干净就先让用户提交/搁置已有改动，别混进 fix 的 commit。
-- **改代码的修复**：先跑一遍 **verify 命令**（见下）+ 测试，作为**基线**。基线本来就失败 → 停下告诉用户"项目改前就跑不过，先别在这上面动手"。
-- 文档类修复（🟢）：不用 verify（文档改不坏构建）。
+- **先读 `execution.trust`** 和 `approved_verify`（见 §验证机制）。
+- 文档类修复（🟢）：不用 verify。
+
+**改前（代码类）——记录 touched files 清单 + 跑基线**：
+- 记录本次将要修改/新建的文件路径（touched files），包括**新建的未跟踪文件**。
+- 若 trust 允许：跑 verify 命令 + 测试作为基线。基线**不全绿** → 记录失败集合（不改前就不通过），不一刀切禁止（很多存量项目本就带失败）；**基线全绿** → 改后必须不新增失败。
 
 **改后**：
 - **重跑 audit 的对应检查**，确认该项已消失。
-- **改代码的修复**：**再跑一遍 verify + 测试**。
-  - 都通过 → 继续提交。
-  - **基线通过、改后失败 → 这次 fix 把项目改坏了 → 立即 `git restore`/`checkout` 撤销本次改动、不提交，并向用户报告哪里坏了。**
+- **若 trust 允许、且改代码了**：再跑一遍 verify + 测试。
+  - 都通过 → 提交。
+  - baseline 全绿、改后失败 → fix 改坏了 → **精确回滚**（只还原 touched files）。
+  - baseline 本有失败 → 比失败集合：**新增失败 = 改坏了 → 回滚**；旧失败照旧 = OK。
+  - 失败集合无法可靠比较 → **说"无法自动确认"，不假装验证过。**
 - **一项一 commit**，信息格式：`Fix(audit-<类型>): <一句话> — <文件>`。
 
 ---
 
-## 验证机制（改完确认"没坏"，尤其针对没测试的项目）
+## 验证机制（execution.trust + verify + rollback）
 
-> 目的：不光靠"项目自己的测试"——很多项目（尤其前端）没测试。用**能不能构建/编译通过**当"冒烟测试"，给小白兜底。
+### 优先级（高→低）
+`approved_verify` 白名单 > `execution.trust`（disabled / prompt / trusted）> 自动探测命令。
 
-**verify 命令从哪来**（按顺序取第一个）：
-1. `.project-health/config.yml` 里的 `verify:`（用户显式指定，最准）。例：`verify: "npm run build"`
-2. 自动探测：
-   - `package.json` 有 `build` 脚本 → `npm run build`（其次 `typecheck` / `tsc --noEmit`）
-   - `pom.xml` → `./mvnw -q -DskipTests compile`
-   - `build.gradle` → `./gradlew -q compileJava`
-   - Python 包 → `python -m compileall <包目录>`
-3. 都没有 → **不假装验证过**。明确告诉用户："**无测试、也没找到可用的构建命令，无法自动确认没改坏**。建议你在 `config.yml` 配一个 `verify` 命令，或手动把项目跑起来确认。" 由用户决定是否保留本次改动。
+### 三档 trust
 
-**坏了就撤（beginner 安全网核心）**：
-- 只要"基线过、改后不过"，**fix 主动撤销、不留烂摊子**——用户不用看懂代码，工具自己发现改坏了并回到安全状态。
-- 因为一项一 commit / 改前工作区干净，撤销很干净（`git restore .` 或 `git checkout -- <files>`）。
+**`disabled`**：**不执行任何项目 build/test/verify/typecheck 命令**。只读检查（re-audit、读文件、diff）仍然允许。改后明确告诉用户："安全闸门关着，未执行自动验证——建议你手动确认项目还能正常 build/跑通。"
 
-**config 新增字段**（可选）：
+**`prompt`**（默认）：首次想跑某个 verify/test 命令前，**先展示具体命令 + 说明会执行项目代码 → 等用户确认 → 确认后才跑**。确认后可记入 `approved_verify`（下次不再问）。**Agent 不自行往白名单加东西。** 自动探测出的命令**不算"已批准"**——必须单独确认。
+
+**`trusted`**：可直接执行 `config.verify` 和已在 `approved_verify` 白名单里的命令。自动探测出的新命令**仍需确认或与白名单对照**。
+
+### verify 命令来源
+1. `config.verify`（用户显式指定，最准）。例：`verify: "npm run build"`
+2. 自动探测（仅在 trust 允许时）：`npm run build` / mvnw compile / gradle / Python compileall
+3. 都没有 → 诚实说"无法自动确认没改坏"。
+
+### 精确回滚
+- **改前记录 touched files**(含新建文件)。
+- 改坏了 → **只还原/删除 touched files**:
+  - 改过的已有文件 → `git checkout -- <file>` 或 `git restore <file>`
+  - 本次新建的文件 → 直接删除
+  - **不碰**：`git restore .` / `git checkout -- .` / `git clean -fd` / `git reset --hard`
+  - **不碰**：原有未跟踪文件（不属于本次 fix 的）
+- 若无法确定精确回滚范围 → **停下、报告**，不执行宽泛清理。
+
+### 基线本有失败的处理
+- 改前记录失败集合(文件名/测试名/错误摘要——能可靠比较才行)。
+- 改后比对：**只新增的失败**算 fix 引入的 → 回滚；**旧失败照旧** → 允许。
+- 若失败集合**无法可靠比较**(非结构化输出、随机数据、不可靠的测试)→**说"无法自动判断是否新增失败"，不装。**
+
+### config 字段
 ```yaml
-verify: "npm run build"   # 改完代码后用它确认项目没坏；不填则自动探测
+verify: "npm run build"
+execution:
+  trust: prompt          # disabled | prompt | trusted
+  approved_verify: []    # 用户批准过的命令白名单
 ```
+- `doc_links` 也在 config 中（watch 用），fix 不直接读，但保持契约一致。
 
 ---
 
