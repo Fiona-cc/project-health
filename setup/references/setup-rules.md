@@ -88,11 +88,9 @@ constitution:                # 工程规矩 — 单一真源
 suppressions: []             # id = finding 的 stable id，由 audit 生成
 ```
 
-- **谁写/谁读**：**setup 生成并维护**；**audit 只读**（`thresholds`/`level`/`context`/`suppressions`）；**fix 可追加 `suppressions`**（也读 `verify`）；**watch 读 `doc_maintenance`**；**design 读 `domain` + `context`** 加载对应领域包。
+- **谁写/谁读**：**setup 生成并维护**；**audit 只读**（`thresholds`/`level`/`context`/`suppressions`）；**fix 可追加 `suppressions`**（也读 `verify`）；**watch 读 `doc_links`**（代码→文档 显式映射）进行文档漂移降噪；**design 读 `domain` + `context`** 加载对应领域包。
 - **`constitution.path`** 是工程规矩的单一真源（config 里不再保留 `project_rules`）。
 - **缺字段回落默认**：保证 audit/fix 不依赖 setup 也能跑。正式 schema 以 `docs/schema-contract-v1.md` 为准，本文件不维护独立 schema 复本。
-- **缺字段回落默认**：保证 audit/fix 不依赖 setup 也能跑。
-- 只写 setup 认得的字段；不确定的字段留默认，别乱填。
 
 ---
 

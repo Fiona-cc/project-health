@@ -27,7 +27,7 @@ A **design advisor** — helps you think through project or module structure **b
 
 1. **Advice only, no files** — output is design recommendations + (after confirmation) the constitution YAML; never creates business code or directories.
 2. **Default conversational** — design advice stays in the chat; only the constitution is a persistent file (and only after you confirm).
-3. **Domain-agnostic core** — the 7 universal engineering principles work for any field; frontend is the only "deep domain pack" in v1; for other domains, honestly fall back to the universal principles.
+3. **Domain-agnostic core** — the 7 universal engineering principles work for any field. Domain packs (frontend, deep-learning) add field-specific guidance; load them by reading `config.yml`'s `domain` field. For multi-domain projects, load only the packs relevant to the current design scope. No matching pack → honestly fall back to the universal principles + say "I don't have a deep pack for this domain."
 4. **Deep in principles, shallow in domains** — the value is in the cross-domain engineering thinking (which we can master); domain-specific details are thin + point to authoritative sources (framework official guides, cookiecutter templates), not an encyclopedia.
 5. **Fractal** — same thinking checklist, at project scale AND module scale.
 
@@ -74,9 +74,9 @@ Identify scope → walk the checklist → give concrete advice grounded in the r
 - Only contains **confirmed, stable, concrete, judgeable** rules — NO abstract slogans ("keep single responsibility" stays in the checklist; the constitution gets "page components must not contain business logic; extract to services/hooks").
 - The 7 principles are the **internal lens**; the constitution records **what those principles mean for this specific project**.
 
-## Domain packs (v1 = thin frontend)
+## Domain packs
 
-Location: `design/references/domains/frontend.md` — default layering, global concerns placement, dependency direction, typical anti-patterns, and a few authoritative pointers. See [references/design-rules.md](references/design-rules.md).
+Location: `design/references/domains/`. Available: `frontend.md` (精装), `deep-learning.md` (薄包), `_template.md`. Load by reading `config.yml`'s `domain` field. For multi-domain projects, only load the packs relevant to the current design scope. No matching pack → honestly fall back to the universal principles.
 
 For domains without a deep pack: honestly fall back to the universal 7 principles. Never fabricate depth.
 

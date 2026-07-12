@@ -35,7 +35,7 @@ One-time onboarding for a project. **Detects the project's background (猜后再
 
 ## Config schema (setup is the initial generator / main maintainer)
 
-**Who writes/reads it:** setup **generates & maintains** it · audit **reads only** (`thresholds`/`level`/`context`/`suppressions`) · fix **may append** `suppressions` (also reads `verify`) · watch reads `doc_maintenance` · design reads `domain` + `context` to load matching domain packs. **`constitution.path`** is the single source of truth for project rules (no separate `project_rules`). The authoritative schema is `docs/schema-contract-v1.md`.**
+**Who writes/reads it:** setup **generates & maintains** it · audit **reads only** (`thresholds`/`level`/`context`/`suppressions`) · fix **may append** `suppressions` (also reads `verify`) · watch reads `doc_links` (code-to-doc mappings for drift noise reduction) · design reads `domain` + `context` to load matching domain packs. **`constitution.path`** is the single source of truth for project rules (no separate `project_rules`). The authoritative schema is `docs/schema-contract-v1.md`.
 
 ```yaml
 # 正式 schema 以 docs/schema-contract-v1.md 为准；本处为示例。

@@ -295,7 +295,7 @@ audit 读不到 config 时，默认走"简明 + 只报关键项"的中间档。
 | **A 面 · Stage 3** | `setup`：**引导式**猜+问背景 → 生成 config（含 `context`） | ✅ 完成·真机验证 |
 | **A 面 · Stage 4** | `watch`：对比 baseline 报增量 + 文档漂移检测 | ✅ 完成·真机验证 |
 | **A 面 · 发布** | 拆成独立 skill 文件夹 + 发布 GitHub（Fiona-cc/project-health） | ✅ 完成 |
-| **B 面（下一大方向）** | `design`：可缩放"设计顾问" skill（项目/模块）+ 填**领域包** + **宪法**（= `project_rules`） | ⬜ 未来·本次只画蓝图 |
+| **B 面 · design** | `design`：可缩放"设计顾问" skill（项目/模块）+ 前端·DL **领域包** + **宪法**（= `constitution.yml`） | ✅ Claude Skill 初版可用 |
 | 伴生（独立·可选） | `scaffold`：真去铺项目骨架——独立能力，不在核心 | ⬜ 可选 |
 
 **A 面已完整交付并真机验证（含四轮 GPT 审查 + 一轮真项目全链路）。B 面是下一大方向——本次只把它画进蓝图，不建。** 想大、做小：整张图画全，一块块建。
